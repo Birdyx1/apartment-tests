@@ -1,0 +1,10 @@
+- case_id: empty_password
+  password: ""
+  expected_http: 400
+  expected_code: 400
+  expected_message: 密码不能为空
+- case_id : wrong_password
+  password: "12345"
+  expected_http: 200
+  expected_code: 500
+  expected_message: 用户名或密码错误
