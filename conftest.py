@@ -3,6 +3,7 @@ import pytest
 import requests
 
 from apis.room_api import RoomApi
+from apis.tenant_api import TenantAPI
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
 from apis.auth_api import AuthApi
@@ -174,3 +175,37 @@ def login_state(auth_api, login_payload):
         yield
     finally:
         restore()
+
+
+@pytest.fixture
+def admin_tenant_api(admin_client):
+    return TenantAPI(admin_client)
+
+@pytest.fixture
+def created_tenant(admin_tenant_api):
+    payload = {
+        "name": f"自动化租客-{uuid4().hex[:8]}",
+        "gender": 1,
+        "phone": f"199{uuid4().int % 100000000:08d}",
+        "idCard": f"TEST{uuid4().hex[:14]}",
+        "password":"Tenant123!"
+    }
+    response = admin_tenant_api.create(payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['code'] == 200
+    tenant_id = body['data']['id']
+    assert isinstance(tenant_id, int)
+    assert tenant_id > 0
+    try:
+        yield {
+            "id": tenant_id,
+            "name": payload['name'],
+            "gender": payload['gender'],
+            "phone": payload["phone"],
+            "password": payload["password"],
+        }
+    finally:
+        cleanup = admin_tenant_api.delete(tenant_id)
+        assert cleanup.status_code == 200
+        assert cleanup.json()['code'] == 200
