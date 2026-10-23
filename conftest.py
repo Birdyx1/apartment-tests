@@ -251,7 +251,7 @@ def lease_payload(created_room, created_tenant):
         "rentDueDay": 1,
     }
 @pytest.fixture
-def created_lease(admin_lease_api,lease_payload):
+def created_lease(admin_lease_api,lease_payload,admin_room_api):
     response = admin_lease_api.create(lease_payload)
     assert response.status_code == 200
 
@@ -282,3 +282,36 @@ def created_lease(admin_lease_api,lease_payload):
             f"退房失败：{checkout_body.get('message')}"
         )
         assert checkout_body["data"] is True
+
+        room_response = admin_room_api.detail(lease_payload['roomId'])
+
+        assert room_response.status_code == 200, (
+            f"查询房间状态失败：预期 HTTP 200，实际为 {room_response.status_code}"
+        )
+        room_body = room_response.json()
+
+        assert room_body["code"] == 200
+        assert room_body["data"]["id"] == lease_payload["roomId"]
+        assert room_body["data"]["status"] == 0
+
+        # 退房操作是否真正更新了原来的入住记录。
+        lease_response = admin_lease_api.page(
+            params={
+                "tenantId": lease_payload['tenantId'],
+                "roomId": lease_payload['roomId'],
+            }
+        )
+        assert lease_response.status_code == 200
+        lease_body = lease_response.json()
+        assert lease_body["code"] == 200
+
+        records = lease_body['data']['records']
+        matched = [
+            item for item in records
+            if item["id"] == lease_id
+        ]
+
+        assert len(matched) == 1 # 退房会保留历史。
+        assert matched[0]["status"] == 1
+        assert matched[0]["checkOutTime"], "退房后应记录退房时间"
+
