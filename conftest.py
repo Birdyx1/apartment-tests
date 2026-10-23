@@ -9,6 +9,13 @@ from core.api_client import ApiClient
 from apis.auth_api import AuthApi
 from uuid import uuid4
 from apis.apartment_api import ApartmentApi
+from apis.tenant_auth_api import TenantAuthApi
+
+
+
+
+
+
 @pytest.fixture
 def base_url():
     return BASE_URL
@@ -180,6 +187,18 @@ def login_state(auth_api, login_payload):
 @pytest.fixture
 def admin_tenant_api(admin_client):
     return TenantAPI(admin_client)
+# 对象	用途
+# admin_tenant_api	管理员创建、查询、删除租客资料
+# tenant_client	租客登录及后续租客操作
+@pytest.fixture
+def tenant_client(base_url,request_timeout):
+    with requests.Session() as session:
+        yield ApiClient(
+            session=session,
+            base_url=base_url,
+            timeout=request_timeout
+        )
+
 
 @pytest.fixture
 def created_tenant(admin_tenant_api):
@@ -209,3 +228,8 @@ def created_tenant(admin_tenant_api):
         cleanup = admin_tenant_api.delete(tenant_id)
         assert cleanup.status_code == 200
         assert cleanup.json()['code'] == 200
+
+# 这里使用独立的 tenant_client，不要传 admin_client。
+@pytest.fixture
+def tenant_auth_api(tenant_client):
+    return TenantAuthApi(tenant_client)
