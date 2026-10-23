@@ -1,3 +1,7 @@
+"""YAML 读取学习演示；手动执行会打印数据，不参与 Pytest 测试收集。
+正式用例使用 data_loader.py，勿在演示数据中放真实密码或令牌。
+"""
+
 from pathlib import Path
 
 import yaml

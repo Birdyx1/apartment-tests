@@ -1,7 +1,10 @@
+"""公寓查询测试：每个测试使用独立数据，结束后由 fixture 删除并检查不可见。"""
+
 import pytest
 
 @pytest.mark.p1
 def test_apartment_list(admin_apartment_api, created_apartment):
+    """新建目标公寓后查列表，检查目标恰好一条，不能假定整个列表只有一条。"""
     response = admin_apartment_api.list()
     # 检查列表是否包含创建的公寓
 
@@ -10,6 +13,7 @@ def test_apartment_list(admin_apartment_api, created_apartment):
     assert body['code'] == 200
     assert isinstance(body['data'], list)
 
+    # 整个列表可能有其他公寓，只按本次 ID 找目标，不假定全局总数。
     matched = [
         item for item in body['data'] if item["id"] == created_apartment["id"]
     ]
@@ -26,6 +30,7 @@ def test_apartment_list(admin_apartment_api, created_apartment):
 # ④ fixture：删除刚才创建的公寓
 @pytest.mark.p0
 def test_apartment_detail(admin_apartment_api, created_apartment):
+    """查询本次 fixture 创建的公寓，按 ID 和名称核对，避免依赖人工数据。"""
     response = admin_apartment_api.detail(created_apartment["id"])
 
 
@@ -38,6 +43,9 @@ def test_apartment_detail(admin_apartment_api, created_apartment):
 
 @pytest.mark.p1
 def test_apartment_list_filter_by_name(admin_apartment_api, created_apartment):
+    """同时检查目标存在及所有名称匹配，避免空列表让逐条检查假通过。
+    当前未主动准备不匹配对照数据，不能将其解释为完整筛选覆盖。
+    """
     response = admin_apartment_api.list(
         params={"name": created_apartment["name"]}
     )
@@ -49,6 +57,7 @@ def test_apartment_list_filter_by_name(admin_apartment_api, created_apartment):
     assert created_apartment["id"] in [
         item['id'] for item in body['data']
     ]
+    # 目标存在检查防止空列表假通过；逐条名称检查防止混入不匹配结果。
     for item in body["data"]:
         assert created_apartment["name"] in item["name"], (
             f"返回了不符合名称条件的公寓：{item['name']}"
