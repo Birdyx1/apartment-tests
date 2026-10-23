@@ -35,3 +35,16 @@ def test_tenant_login_success(tenant_auth_api,created_tenant):
     assert data["tokenType"] == "Bearer"
     assert data["tenant"]["id"] == created_tenant["id"]
     assert data["tenant"]["name"] == created_tenant["name"]
+
+
+    profile_response = tenant_auth_api.profile(
+        headers = {
+            "Authorization": f"Bearer {token}",
+        }
+    )
+
+    assert profile_response.status_code == 200
+    body = profile_response.json()
+    assert body['code'] == 200
+    assert body['data']['id'] == created_tenant['id']
+    assert body['data']['name'] == created_tenant['name']

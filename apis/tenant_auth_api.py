@@ -9,3 +9,10 @@ class TenantAuthApi:
             "/tenant-app/auth/login",
             json=payload,
         )
+
+    def profile(self,**kwargs):
+        return self.client.request(
+            "GET",
+            "/tenant-app/profile",
+            **kwargs,
+        )
