@@ -2,6 +2,7 @@
 import pytest
 import requests
 
+from apis import lease_api
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
@@ -10,8 +11,8 @@ from apis.auth_api import AuthApi
 from uuid import uuid4
 from apis.apartment_api import ApartmentApi
 from apis.tenant_auth_api import TenantAuthApi
-
-
+from apis.lease_api import LeaseApi
+from datetime import datetime
 
 
 
@@ -233,3 +234,51 @@ def created_tenant(admin_tenant_api):
 @pytest.fixture
 def tenant_auth_api(tenant_client):
     return TenantAuthApi(tenant_client)
+
+@pytest.fixture
+def admin_lease_api(admin_client):
+    return LeaseApi(admin_client)
+
+@pytest.fixture
+def lease_payload(created_room, created_tenant):
+    return {
+        "tenantId": created_tenant["id"],
+        "roomId": created_room["id"],
+        "checkInTime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "leaseMonths": 1,
+        "deposit": 500,
+        "monthlyRent": 1500,
+        "rentDueDay": 1,
+    }
+@pytest.fixture
+def created_lease(admin_lease_api,lease_payload):
+    response = admin_lease_api.create(lease_payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body['code'] == 200,(
+        f"创建入住关系失败：{body.get('message')}"
+    )
+
+    lease_id = body['data']['id']
+    assert isinstance(lease_id, int)
+    assert lease_id > 0
+
+    try:
+        yield {
+            "id": lease_id,
+            "tenantId": lease_payload['tenantId'],
+            "roomId": lease_payload['roomId'],
+        }
+    finally:
+        checkout = admin_lease_api.checkout({
+            "leaseId": lease_id,
+            "checkOutTime":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        assert checkout.status_code == 200
+        checkout_body = checkout.json()
+
+        assert checkout_body["code"] == 200, (
+            f"退房失败：{checkout_body.get('message')}"
+        )
+        assert checkout_body["data"] is True
