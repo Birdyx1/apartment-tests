@@ -20,8 +20,8 @@ from apis.tenant_auth_api import TenantAuthApi
 from apis.lease_api import LeaseApi
 from datetime import datetime
 from apis.tenant_room_api import TenantRoomApi
-
-
+from apis.worker_auth_api import WorkerAuthApi
+from apis.role_api import RoleApi
 
 @pytest.fixture
 def base_url():
@@ -465,3 +465,52 @@ def created_maintenance(
         body = response.json()
         assert body["code"] == 200, body.get("message")
         assert body["data"]["status"] == 3
+
+
+
+@pytest.fixture
+def worker_client(base_url,request_timeout):
+    """保存独立的会话、请求头，结束后关闭会话。"""
+    with requests.Session() as session:
+        yield ApiClient(
+            session = session,
+            base_url = base_url,
+            timeout = request_timeout,
+        )
+
+
+@pytest.fixture
+def worker_auth_api(worker_client):
+    """提供维修工登录接口对象,使用这个客户端调用维修工认证接口。"""
+    return WorkerAuthApi(worker_client)
+
+@pytest.fixture
+def admin_role_api(admin_client):
+    """提供管理员身份的角色查询接口对象。"""
+    return RoleApi(admin_client)
+
+
+@pytest.fixture
+def worker_role_id(admin_role_api):
+    """根据维修工角色编码，查询实际角色 ID。"""
+    response = admin_role_api.enabled()
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    roles = body["data"]
+    assert isinstance(roles, list)
+
+    matched = [
+        role for role in roles
+        if role["roleCode"] == "MAINTENANCE_WORKER"
+    ]
+    assert len(matched) == 1, "应恰好存在一个启用的维修工角色"
+
+    role = matched[0]
+    assert role["status"] == 1
+
+    role_id = role["id"]
+    assert type(role_id) is int and role_id > 0
+    return role_id
