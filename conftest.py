@@ -3,13 +3,14 @@ Pytest 根据测试形参自动寻找同名 fixture，无需在测试中 import 
 所有 fixture 当前均使用默认 function 作用域；同一测试内同名依赖会复用，
 不同测试重新准备。测试函数中的断言验证业务，fixture 中的断言验证准备/清理。
 """
-
+import uuid
 
 import pytest
 import requests
 
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
+from apis.tenant_maintenance_api import TenantMaintenanceApi
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
 from apis.auth_api import AuthApi
@@ -398,3 +399,69 @@ def logged_in_tenant_client(
 def tenant_room_api(logged_in_tenant_client):
     """为“我的房间”接口提供已登录租客身份，供后续业务测试使用。"""
     return TenantRoomApi(logged_in_tenant_client)
+@pytest.fixture
+def tenant_maintenance_api(logged_in_tenant_client):
+    """
+    提供使用已登录租客身份创建维修记录的接口
+    :param logged_in_tenant_client:
+    :return:
+    """
+    return TenantMaintenanceApi(logged_in_tenant_client)
+
+@pytest.fixture
+def maintenance_payload():
+    """提供每次测试独立的保修请求数据"""
+    return {
+        "title": f"自动化报修-{uuid4().hex[:8]}",
+        "description": "卫生间水管漏水",
+        "urgency": 1,
+        "imageKeys": [],
+    }
+
+
+@pytest.fixture
+def created_maintenance(
+        maintenance_payload,
+        tenant_maintenance_api,
+        created_lease,
+):    # yield 前：依赖created_lease保证已入住，然后创建报修，取得工单ID。
+    """创建报修工单，并在测试结束后恢复为已取消状态。"""
+    response = tenant_maintenance_api.create(maintenance_payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['code'] == 200,(
+        f"创建报修工单失败：{body.get('message')}"
+    )
+
+    order_id = body['data']['id']
+    assert isinstance(order_id, int)
+    assert order_id > 0
+    try:
+        yield {
+            "id": order_id,
+            "tenantId": created_lease['tenantId'],
+            "roomId": created_lease['roomId'],
+        }
+    finally:
+        # 先检查当前状态
+        detail_response = tenant_maintenance_api.detail(order_id)
+        assert detail_response.status_code == 200
+        detail_body = detail_response.json()
+        assert detail_body["code"] == 200, (
+            f"查询报修工单详情失败：{detail_body.get('message')}"
+        )
+        status = detail_body['data']['status']
+        if status in (0, 1):
+            response = tenant_maintenance_api.cancel(order_id)
+            assert response.status_code == 200
+            body = response.json()
+            assert body["code"] == 200, body.get("message")
+            assert body["data"] is True
+        else:
+            assert status == 3, f"无法按预期清理工单，当前状态：{status}"
+        # 核对取消后的实际状态。
+        response = tenant_maintenance_api.detail(order_id)
+        assert response.status_code == 200
+        body = response.json()
+        assert body["code"] == 200, body.get("message")
+        assert body["data"]["status"] == 3
