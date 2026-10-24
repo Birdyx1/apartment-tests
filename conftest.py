@@ -8,7 +8,6 @@ Pytest 根据测试形参自动寻找同名 fixture，无需在测试中 import 
 import pytest
 import requests
 
-from apis import lease_api
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
