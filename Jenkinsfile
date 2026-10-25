@@ -17,8 +17,14 @@ pipeline {
 
         stage('运行单条接口测试') {
             steps {
-                sh 'APARTMENT_BASE_URL=http://host.docker.internal:8080 .venv/bin/python -m pytest -q tests/test_apartment.py::test_apartment_list'
+                sh 'APARTMENT_BASE_URL=http://host.docker.internal:8080 .venv/bin/python -m pytest -q --alluredir=allure-results --clean-alluredir tests/test_apartment.py::test_apartment_list'
             }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
         }
     }
 }
