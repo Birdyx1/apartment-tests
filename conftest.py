@@ -220,6 +220,12 @@ def admin_apartment_api(admin_client):
 
 
 @pytest.fixture
+def worker_apartment_api(logged_in_worker_client):
+    """提供已登录维修工身份的公寓接口对象。"""
+    return ApartmentApi(logged_in_worker_client)
+
+
+@pytest.fixture
 def admin_notice_api(admin_client):
     """提供管理员身份的公告接口对象。"""
     return NoticeApi(admin_client)
@@ -321,6 +327,74 @@ def login_state(auth_api, login_payload):
 def admin_tenant_api(admin_client):
     """提供管理员身份的租客资料接口对象，不代表租客本人身份。"""
     return TenantAPI(admin_client)
+
+
+@pytest.fixture
+def admin_operator_role_id(admin_role_api):
+    """查找具备常规租客管理权限的系统管理员角色 ID。"""
+    roles = assert_response(admin_role_api.enabled())["data"]
+    matches = [role for role in roles if role["roleCode"] == "ADMIN"]
+    assert len(matches) == 1, "应恰好存在一个启用的系统管理员角色"
+    return matches[0]["id"]
+
+
+@pytest.fixture
+def admin_operator_payload(admin_operator_role_id):
+    """准备带有系统管理员角色的临时账号，用于跨管理员数据归属测试。"""
+    suffix = uuid4().hex[:8]
+    return {
+        "username": f"auto_admin_{suffix}",
+        "password": "Admin123!",
+        "email": f"auto_admin_{suffix}@example.com",
+        "phone": f"199{uuid4().int % 100000000:08d}",
+        "status": 1,
+        "roleIds": [admin_operator_role_id],
+    }
+
+
+@pytest.fixture
+def created_admin_operator(admin_user_api, admin_operator_payload):
+    """创建用于隔离验证的临时系统管理员，退出时由超级管理员删除。"""
+    with managed_account(
+        admin_user_api,
+        admin_operator_payload,
+        ("username", "password"),
+    ) as user:
+        yield user
+
+
+@pytest.fixture
+def admin_operator_client(
+    base_url, request_timeout, api_evidence, created_admin_operator
+):
+    """使用独立 Session 登录临时系统管理员，不污染超级管理员令牌。"""
+    with requests.Session() as session:
+        client = ApiClient(
+            session=session,
+            base_url=base_url,
+            timeout=request_timeout,
+            evidence_records=api_evidence,
+        )
+        response = AuthApi(client).login({
+            "username": created_admin_operator["username"],
+            "password": created_admin_operator["password"],
+            "roleType": "admin",
+            "captchaId": "local-learning",
+            "captchaCode": "2998",
+        })
+        body = assert_response(response)
+        token = body["data"]["accessToken"]
+        assert isinstance(token, str) and token.strip()
+        session.headers.update({"Authorization": f"Bearer {token}"})
+        yield client
+
+
+@pytest.fixture
+def admin_operator_tenant_api(admin_operator_client):
+    """提供第二个管理员身份的租客资料接口。"""
+    return TenantAPI(admin_operator_client)
+
+
 # 对象	用途
 # admin_tenant_api	管理员创建、查询、删除租客资料
 # tenant_client	租客登录及后续租客操作
@@ -351,7 +425,11 @@ def created_tenant(admin_tenant_api):
         "idCard": f"TEST{uuid4().hex[:14]}",
         "password":"Tenant123!"
     }
-    with managed_account(admin_tenant_api, payload, ("name", "gender", "phone", "password")) as tenant:
+    with managed_account(
+        admin_tenant_api,
+        payload,
+        ("name", "gender", "phone", "idCard", "password"),
+    ) as tenant:
         yield tenant
 
 # 这里使用独立的 tenant_client，不要传 admin_client。
@@ -824,7 +902,11 @@ def created_second_tenant(admin_tenant_api):
         "idCard": f"TEST{uuid4().hex[:14]}",
         "password": "Tenant123!",
     }
-    with managed_account(admin_tenant_api, payload, ("phone", "password")) as tenant:
+    with managed_account(
+        admin_tenant_api,
+        payload,
+        ("phone", "idCard", "password"),
+    ) as tenant:
         yield tenant
 
 

@@ -29,3 +29,34 @@ class TenantAPI:
             "GET",
             f"/tenant/{tenant_id}",
         )
+
+    def page(self, **kwargs):
+        """管理员分页查询租客资料，可通过 params 传入筛选条件。"""
+        return self.client.request(
+            "GET",
+            "/tenant/page",
+            **kwargs
+        )
+
+    def update(self, tenant_id, payload):
+        """管理员更新租客资料；password 可选，省略时不应修改登录密码。"""
+        return self.client.request(
+            "PUT",
+            f"/tenant/update/{tenant_id}",
+            json=payload,
+        )
+
+    def set_password(self, tenant_id, password):
+        """管理员为租客设置新密码。"""
+        return self.client.request(
+            "PUT",
+            f"/tenant/set-password/{tenant_id}",
+            json={"password": password},
+        )
+
+    def reset_password(self, tenant_id):
+        """管理员重置租客密码；后端返回本次生成的默认密码。"""
+        return self.client.request(
+            "PUT",
+            f"/tenant/reset-password/{tenant_id}",
+        )

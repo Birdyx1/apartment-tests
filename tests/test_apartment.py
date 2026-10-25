@@ -110,3 +110,19 @@ def test_apartment_page_splits_records_across_pages(
     assert {first_id, second_id} == expected_ids
 
 
+@pytest.mark.p1
+def test_worker_cannot_view_admin_owned_apartment(
+    worker_apartment_api, created_apartment,
+):
+    """维修工列表中不可见管理员公寓，直接按 ID 查询也应拒绝。"""
+    worker_list = assert_response(worker_apartment_api.list())["data"]
+    assert created_apartment["id"] not in {
+        apartment["id"] for apartment in worker_list
+    }
+
+    response = worker_apartment_api.detail(created_apartment["id"])
+    body = assert_response(response, code=403)
+    assert body["message"] == "无权访问该公寓"
+    assert body.get("data") is None
+
+

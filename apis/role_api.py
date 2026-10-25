@@ -15,6 +15,13 @@ class RoleApi:
             **kwargs
         )
 
+    def detail(self, role_id):
+        """按角色 ID 查询角色详情。"""
+        return self.client.request(
+            "GET",
+            f"/system/role/{role_id}",
+        )
+
     def enabled(self):
         """查询所有启用的角色。"""
         return self.client.request(

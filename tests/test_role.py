@@ -42,3 +42,13 @@ def test_role_page_filters_by_code_and_status(admin_role_api):
     role = page["records"][0]
     assert role["roleCode"] == "MAINTENANCE_WORKER"
     assert role["status"] == 1
+
+
+@pytest.mark.p1
+@allure.title("管理员查询维修工角色详情时返回对应角色")
+def test_worker_role_detail_matches_role_id(admin_role_api, worker_role_id):
+    role = assert_response(admin_role_api.detail(worker_role_id))["data"]
+
+    assert role["id"] == worker_role_id
+    assert role["roleCode"] == "MAINTENANCE_WORKER"
+    assert role["status"] == 1
