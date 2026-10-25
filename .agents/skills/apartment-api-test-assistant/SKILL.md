@@ -41,6 +41,8 @@ When asked to **补全**, implement the scoped missing test automation and run t
 
 Do not assume a database assertion is needed when the project tests the API contract. Do not generate a full test suite when one focused case closes the requested gap.
 
+For a **whole-project audit**, inventory backend controller groups, API wrapper modules, test modules, pytest collection, available contract documents, CI/Allure evidence, and known defects. Map coverage by business domain and mark unmapped endpoints as candidates for review rather than declaring them untested solely from a filename mismatch. State whether the audit is a static inventory or a line-by-line assertion review, and do not extrapolate from one sample to the whole suite.
+
 ## Evaluate test quality
 
 For a review, evaluate each dimension as **OK**, **Gap**, or **Unclear**, and attach a file/test/evidence reference:

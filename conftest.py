@@ -171,6 +171,42 @@ def created_apartment(admin_apartment_api):
         assert check_body["message"] == "公寓不存在"
         assert check_body.get("data") is None
 
+
+@pytest.fixture
+def created_apartment_pair(admin_apartment_api):
+    """创建两套名称共享唯一前缀的公寓，供跨页场景使用并负责清理。"""
+    name_prefix = f"分页测试{uuid4().hex[:8]}"
+    apartments = []
+
+    try:
+        for index in range(2):
+            name = f"{name_prefix}-{index + 1}"
+            body = assert_response(admin_apartment_api.create({"name": name}))
+            apartment_id = body["data"]["id"]
+            assert isinstance(apartment_id, int) and apartment_id > 0
+            apartments.append({"id": apartment_id, "name": name})
+
+        yield {"namePrefix": name_prefix, "items": apartments}
+    finally:
+        cleanup_errors = []
+        for apartment in reversed(apartments):
+            apartment_id = apartment["id"]
+            try:
+                cleanup = admin_apartment_api.delete(apartment_id)
+                assert cleanup.status_code == 200
+                assert cleanup.json()["code"] == 200
+
+                check = admin_apartment_api.detail(apartment_id)
+                assert check.status_code == 200
+                check_body = check.json()
+                assert check_body["code"] == 400
+                assert check_body["message"] == "公寓不存在"
+                assert check_body.get("data") is None
+            except Exception as exc:
+                cleanup_errors.append(f"公寓 {apartment_id} 清理失败：{exc}")
+
+        assert not cleanup_errors, "；".join(cleanup_errors)
+
 @pytest.fixture
 # 它使用已登录的管理员客户端，不会再单独登录一次。
 def admin_apartment_api(admin_client):

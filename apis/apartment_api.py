@@ -14,6 +14,14 @@ class ApartmentApi:
             **kwargs
         )
 
+    def page(self, **kwargs):
+        """分页查询当前管理员的公寓；通过 params 传递分页和筛选条件。"""
+        return self.client.request(
+            "GET",
+            "/apartment/page",
+            **kwargs
+        )
+
     def detail(self,apartment_id):
         """查询指定公寓详情。"""
         return self.client.request(

@@ -59,3 +59,54 @@ def test_apartment_list_filter_by_name(admin_apartment_api, created_apartment):
         )
 
 
+@pytest.mark.p1
+def test_apartment_page_defaults(admin_apartment_api, created_apartment):
+    """按本次随机名称查询默认分页，核对分页元数据和目标记录。"""
+    response = admin_apartment_api.page(
+        params={"name": created_apartment["name"]}
+    )
+
+    body = assert_response(response)
+    page_data = body["data"]
+
+    assert page_data["current"] == 1
+    assert page_data["size"] == 10
+    assert page_data["total"] == 1
+    assert page_data["pages"] == 1
+    assert isinstance(page_data["records"], list)
+    assert len(page_data["records"]) == 1
+    assert page_data["records"][0]["id"] == created_apartment["id"]
+    assert page_data["records"][0]["name"] == created_apartment["name"]
+
+
+@pytest.mark.p1
+def test_apartment_page_splits_records_across_pages(
+    admin_apartment_api, created_apartment_pair
+):
+    """两条匹配公寓按 size=1 分到两页，且两页记录不重复、不遗漏。"""
+    name_prefix = created_apartment_pair["namePrefix"]
+    expected_ids = {item["id"] for item in created_apartment_pair["items"]}
+
+    first_response = admin_apartment_api.page(
+        params={"current": 1, "size": 1, "name": name_prefix}
+    )
+    second_response = admin_apartment_api.page(
+        params={"current": 2, "size": 1, "name": name_prefix}
+    )
+
+    first_page = assert_response(first_response)["data"]
+    second_page = assert_response(second_response)["data"]
+
+    assert first_page["current"] == 1
+    assert second_page["current"] == 2
+    assert first_page["size"] == second_page["size"] == 1
+    assert first_page["total"] == second_page["total"] == 2
+    assert first_page["pages"] == second_page["pages"] == 2
+    assert len(first_page["records"]) == len(second_page["records"]) == 1
+
+    first_id = first_page["records"][0]["id"]
+    second_id = second_page["records"][0]["id"]
+    assert first_id != second_id
+    assert {first_id, second_id} == expected_ids
+
+
