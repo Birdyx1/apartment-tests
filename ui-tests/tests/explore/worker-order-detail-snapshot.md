@@ -1,0 +1,29 @@
+- generic [ref=e91]:
+  - generic [ref=e92]:
+    - button [ref=e93]:
+      - generic [ref=e94] [cursor=pointer]
+    - generic [ref=e101]: 工单详情
+  - generic [ref=e103]:
+    - generic [ref=e104]: UI详情工单-683459b7
+    - generic [ref=e106]:
+      - generic [ref=e107]: 房间
+      - generic [ref=e108]: UI详情测试公寓683459b7 · UI详情-683459b7
+    - generic [ref=e109]:
+      - generic [ref=e110]: 租客
+      - generic [ref=e111]: UI详情租客-683459b7 (18841879195)
+    - generic [ref=e112]:
+      - generic [ref=e113]: 紧急
+      - generic [ref=e114]: 紧急
+    - generic [ref=e116]:
+      - generic [ref=e117]: 状态
+      - generic [ref=e118]: 待处理
+    - generic [ref=e119]:
+      - generic [ref=e120]: 指派
+      - generic [ref=e121]: 未派（可抢）
+    - generic [ref=e122]:
+      - generic [ref=e123]: 描述
+      - generic [ref=e124]: 自动化测试专用描述：检查工单详情展示
+  - generic [ref=e125]:
+    - generic [ref=e126]: 处理记录
+    - generic [ref=e128]: 2026-10-25 23:24:39 · create
+  - button "抢单" [ref=e131] [cursor=pointer]

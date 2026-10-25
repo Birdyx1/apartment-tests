@@ -1,0 +1,51 @@
+- generic [ref=e1]:
+  - generic [ref=e91]:
+    - generic [ref=e92]:
+      - button [ref=e93]:
+        - generic [ref=e94] [cursor=pointer]
+      - generic [ref=e101]: 工单详情
+    - generic [ref=e133]:
+      - generic [ref=e134]: UI完成-44e58c9a
+      - generic [ref=e136]:
+        - generic [ref=e137]: 房间
+        - generic [ref=e138]: UI完成公寓-44e58c9a · UI完成-44e58c9a
+      - generic [ref=e139]:
+        - generic [ref=e140]: 租客
+        - generic [ref=e141]: UI完成租客-44e58c9a (18843200570)
+      - generic [ref=e142]:
+        - generic [ref=e143]: 紧急
+        - generic [ref=e144]: 紧急
+      - generic [ref=e146]:
+        - generic [ref=e147]: 状态
+        - generic [ref=e148]: 处理中
+      - generic [ref=e149]:
+        - generic [ref=e150]: 指派
+        - generic [ref=e151]: auto_ui_complete_44e58c9a
+      - generic [ref=e152]:
+        - generic [ref=e153]: 描述
+        - generic [ref=e154]: 自动化验证完成工单表单
+    - generic [ref=e155]:
+      - generic [ref=e156]: 处理记录
+      - generic [ref=e158]:
+        - generic [ref=e159]: 2026-10-25 23:46:41 · create
+        - generic [ref=e160]: 2026-10-25 23:48:24 · grab
+    - button "完成工单" [ref=e162] [cursor=pointer]
+    - generic:
+      - generic [aria-hidden] [ref=e163]:
+        - button
+      - generic [ref=e165]:
+        - generic [ref=e166] [cursor=pointer]
+        - generic [ref=e172]:
+          - generic [ref=e173]: 完成工单
+          - generic [ref=e175]:
+            - textbox "请填写处理结果（必填）" [ref=e177]: 已检查并修复水管接口，观察两小时未再漏水
+            - generic [ref=e178]: 处理图片（至少1张）
+            - generic [ref=e182]:
+              - button "上传" [ref=e183]
+              - button "上传" [ref=e190] [cursor=pointer]
+            - generic [ref=e191]:
+              - button "取消" [ref=e192] [cursor=pointer]
+              - button "确认完成" [active] [ref=e193] [cursor=pointer]
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 请至少上传一张处理图片

@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e34]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - heading "待抢工单" [level=1] [ref=e38]
+        - paragraph [ref=e39]: 全平台可抢维修任务
+      - generic [ref=e40]:
+        - generic: 下拉刷新
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: UI详情工单-683459b7
+            - generic [ref=e47]: 可抢单
+          - generic [ref=e48]: UI详情测试公寓683459b7 · UI详情-683459b7
+          - generic [ref=e49]:
+            - generic [ref=e50]: 紧急
+            - generic [ref=e51]: 待处理
+          - generic [ref=e52]: 2026-10-25 23:24:39
+    - generic [ref=e54]:
+      - generic [ref=e55] [cursor=pointer]: 抢单
+      - generic [ref=e64] [cursor=pointer]: 我的工单
+      - generic [ref=e73] [cursor=pointer]: 我的
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 登录成功

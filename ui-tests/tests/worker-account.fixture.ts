@@ -3,22 +3,26 @@ import { randomUUID } from 'node:crypto';
 import { request, test as base } from '@playwright/test';
 import { getAuthStatePath } from '../auth-state';
 
-type WorkerAccount = { username: string; password: string };
+type WorkerAccount = { id: number; username: string; password: string };
+
+/** 构造本地管理员 API 上下文；令牌只从被忽略的浏览器登录态文件读取，不输出。 */
+export async function createAdminApi() {
+  const storageState = JSON.parse(await fs.readFile(getAuthStatePath(), 'utf8'));
+  const token = storageState.origins
+    ?.flatMap((origin: { localStorage?: { name: string; value: string }[] }) => origin.localStorage ?? [])
+    .find((entry: { name: string }) => entry.name === 'accessToken')?.value;
+  if (!token) throw new Error('管理员登录态未找到 accessToken，无法创建隔离测试数据');
+
+  return request.newContext({
+    baseURL: process.env.API_BASE_URL ?? 'http://localhost:8080',
+    extraHTTPHeaders: { Authorization: `Bearer ${token}` },
+  });
+}
 
 /** 通过管理员登录态创建临时维修工；fixture 退出时删除，UI 测试只读本人工单。 */
 export const test = base.extend<{ workerAccount: WorkerAccount }>({
   workerAccount: async ({}, use) => {
-    const storageState = JSON.parse(await fs.readFile(getAuthStatePath(), 'utf8'));
-    const token = storageState.origins
-      ?.flatMap((origin: { localStorage?: { name: string; value: string }[] }) => origin.localStorage ?? [])
-      .find((entry: { name: string }) => entry.name === 'accessToken')?.value;
-    if (!token) throw new Error('管理员登录态未找到 accessToken，无法创建隔离的维修工测试账号');
-
-    const apiBaseUrl = process.env.API_BASE_URL ?? 'http://localhost:8080';
-    const api = await request.newContext({
-      baseURL: apiBaseUrl,
-      extraHTTPHeaders: { Authorization: `Bearer ${token}` },
-    });
+    const api = await createAdminApi();
     let workerId: number | undefined;
     try {
       const rolesResponse = await api.get('/system/role/enabled');
@@ -47,8 +51,9 @@ export const test = base.extend<{ workerAccount: WorkerAccount }>({
       if (!created.ok() || createdBody.code !== 200 || !createdBody.data?.id) {
         throw new Error(`创建临时维修工失败（HTTP ${created.status()}，业务码 ${createdBody.code}）`);
       }
-      workerId = createdBody.data.id;
-      await use({ username, password });
+      const createdWorkerId = createdBody.data.id as number;
+      workerId = createdWorkerId;
+      await use({ id: createdWorkerId, username, password });
     } finally {
       if (workerId !== undefined) {
         const deleted = await api.delete(`/system/user/${workerId}`);

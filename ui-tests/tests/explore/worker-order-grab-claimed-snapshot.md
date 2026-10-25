@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e91]:
+    - generic [ref=e92]:
+      - button [ref=e93]:
+        - generic [ref=e94] [cursor=pointer]
+      - generic [ref=e101]: 工单详情
+    - generic [ref=e155]:
+      - generic [ref=e156]: UI抢单-51cca7db
+      - generic [ref=e158]:
+        - generic [ref=e159]: 房间
+        - generic [ref=e160]: UI抢单公寓-51cca7db · UI抢单-51cca7db
+      - generic [ref=e161]:
+        - generic [ref=e162]: 租客
+        - generic [ref=e163]: UI抢单租客-51cca7db (18842664734)
+      - generic [ref=e164]:
+        - generic [ref=e165]: 紧急
+        - generic [ref=e166]: 紧急
+      - generic [ref=e168]:
+        - generic [ref=e169]: 状态
+        - generic [ref=e170]: 处理中
+      - generic [ref=e171]:
+        - generic [ref=e172]: 指派
+        - generic [ref=e173]: auto_ui_grab_51cca7db
+      - generic [ref=e174]:
+        - generic [ref=e175]: 描述
+        - generic [ref=e176]: 自动化验证抢单状态流转
+    - generic [ref=e177]:
+      - generic [ref=e178]: 处理记录
+      - generic [ref=e180]:
+        - generic [ref=e181]: 2026-10-25 23:37:45 · create
+        - generic [ref=e182]: 2026-10-25 23:41:02 · grab
+    - button "完成工单" [ref=e184] [cursor=pointer]
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 抢单成功

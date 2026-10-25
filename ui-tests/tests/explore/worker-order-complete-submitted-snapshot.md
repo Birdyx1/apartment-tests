@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e91]:
+    - generic [ref=e92]:
+      - button [ref=e93]:
+        - generic [ref=e94] [cursor=pointer]
+      - generic [ref=e101]: 工单详情
+    - generic [ref=e238]:
+      - generic [ref=e239]: UI完成-44e58c9a
+      - generic [ref=e241]:
+        - generic [ref=e242]: 房间
+        - generic [ref=e243]: UI完成公寓-44e58c9a · UI完成-44e58c9a
+      - generic [ref=e244]:
+        - generic [ref=e245]: 租客
+        - generic [ref=e246]: UI完成租客-44e58c9a (18843200570)
+      - generic [ref=e247]:
+        - generic [ref=e248]: 紧急
+        - generic [ref=e249]: 紧急
+      - generic [ref=e251]:
+        - generic [ref=e252]: 状态
+        - generic [ref=e253]: 已完成
+      - generic [ref=e254]:
+        - generic [ref=e255]: 指派
+        - generic [ref=e256]: auto_ui_complete_44e58c9a
+      - generic [ref=e257]:
+        - generic [ref=e258]: 描述
+        - generic [ref=e259]: 自动化验证完成工单表单
+      - generic [ref=e260]: 处理图片
+      - generic [ref=e270]:
+        - generic [ref=e271]: 处理备注
+        - generic [ref=e272]: 已检查并修复水管接口，观察两小时未再漏水
+    - generic [ref=e273]:
+      - generic [ref=e274]: 处理记录
+      - generic [ref=e276]:
+        - generic [ref=e277]: 2026-10-25 23:46:41 · create
+        - generic [ref=e278]: 2026-10-25 23:48:24 · grab
+        - generic [ref=e279]: 2026-10-25 23:53:57 · complete · 已检查并修复水管接口，观察两小时未再漏水
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 已完成
