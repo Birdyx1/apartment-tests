@@ -15,9 +15,9 @@ pipeline {
             }
         }
 
-        stage('收集测试用例') {
+        stage('运行单条接口测试') {
             steps {
-                sh '.venv/bin/python -m pytest --collect-only -q'
+                sh 'APARTMENT_BASE_URL=http://host.docker.internal:8080 .venv/bin/python -m pytest -q tests/test_apartment.py::test_apartment_list'
             }
         }
     }
