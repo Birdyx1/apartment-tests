@@ -15,9 +15,9 @@ pipeline {
             }
         }
 
-        stage('运行单条接口测试') {
+        stage('运行全量接口回归') {
             steps {
-                sh 'APARTMENT_BASE_URL=http://host.docker.internal:8080 .venv/bin/python -m pytest -q --alluredir=allure-results --clean-alluredir tests/test_apartment.py::test_apartment_list'
+                sh 'APARTMENT_BASE_URL=http://host.docker.internal:8080 APARTMENT_MINIO_ENDPOINT=host.docker.internal:9000 .venv/bin/python -m pytest -q --alluredir=allure-results --clean-alluredir'
             }
         }
     }
