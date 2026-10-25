@@ -1,0 +1,32 @@
+- generic [ref=e91]:
+  - generic [ref=e92]:
+    - button [ref=e93]:
+      - generic [ref=e94] [cursor=pointer]
+    - generic [ref=e101]: 工单详情
+  - generic [ref=e156]:
+    - generic [ref=e157]: UI接单探索工单-b36c54bf
+    - generic [ref=e159]:
+      - generic [ref=e160]: 房间
+      - generic [ref=e161]: UI接单探索-b36c54bf · UI-b36c54bf
+    - generic [ref=e162]:
+      - generic [ref=e163]: 租客
+      - generic [ref=e164]: UI租客-b36c54bf (18844136864)
+    - generic [ref=e165]:
+      - generic [ref=e166]: 紧急
+      - generic [ref=e167]: 紧急
+    - generic [ref=e169]:
+      - generic [ref=e170]: 状态
+      - generic [ref=e171]: 处理中
+    - generic [ref=e172]:
+      - generic [ref=e173]: 指派
+      - generic [ref=e174]: explore_worker_b36c54bf
+    - generic [ref=e175]:
+      - generic [ref=e176]: 描述
+      - generic [ref=e177]: 仅用于已派单接单页面探索
+  - generic [ref=e178]:
+    - generic [ref=e179]: 处理记录
+    - generic [ref=e181]:
+      - generic [ref=e182]: 2026-10-26 00:02:17 · create
+      - generic [ref=e183]: 2026-10-26 00:02:17 · assign · 指派给 1196
+      - generic [ref=e184]: 2026-10-26 00:08:14 · accept
+  - button "完成工单" [ref=e186] [cursor=pointer]

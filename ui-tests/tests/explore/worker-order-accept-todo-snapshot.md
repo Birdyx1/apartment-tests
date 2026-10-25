@@ -1,0 +1,20 @@
+- generic [ref=e34]:
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - heading "待抢工单" [level=1] [ref=e38]
+      - paragraph [ref=e39]: 全平台可抢维修任务
+    - generic [ref=e40]:
+      - generic: 下拉刷新
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: UI接单探索工单-b36c54bf
+          - generic [ref=e47]: 待接单
+        - generic [ref=e48]: UI接单探索-b36c54bf · UI-b36c54bf
+        - generic [ref=e49]:
+          - generic [ref=e50]: 紧急
+          - generic [ref=e51]: 待处理
+        - generic [ref=e52]: 2026-10-26 00:02:17
+  - generic [ref=e54]:
+    - generic [ref=e55] [cursor=pointer]: 抢单
+    - generic [ref=e64] [cursor=pointer]: 我的工单
+    - generic [ref=e73] [cursor=pointer]: 我的

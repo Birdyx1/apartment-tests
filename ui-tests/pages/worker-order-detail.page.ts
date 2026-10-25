@@ -36,6 +36,19 @@ export class WorkerOrderDetailPage {
     await this.page.getByRole('dialog').getByRole('button', { name: '确定' }).click();
   }
 
+  async openAcceptConfirmation() {
+    await this.page.getByRole('button', { name: '接单' }).click();
+    return this.page.getByRole('dialog');
+  }
+
+  async cancelAccept() {
+    await this.page.getByRole('dialog').getByRole('button', { name: '取消' }).click();
+  }
+
+  async confirmAccept() {
+    await this.page.getByRole('dialog').getByRole('button', { name: '确定' }).click();
+  }
+
   async grabForCompletion() {
     await this.page.getByRole('button', { name: '抢单' }).click();
     await this.page.getByRole('dialog').getByRole('button', { name: '确定' }).click();
