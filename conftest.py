@@ -12,6 +12,7 @@ from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from apis.tenant_maintenance_api import TenantMaintenanceApi
 from apis.user_api import UserApi
+from apis.worker_maintenance_api import WorkerMaintenanceApi
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
 from apis.auth_api import AuthApi
@@ -565,3 +566,37 @@ def created_worker(admin_user_api,worker_payload):
             f"删除维修工账号失败：{body.get('message')}"
         )
 
+
+@pytest.fixture
+def logged_in_worker_client(
+        worker_client,
+        worker_auth_api,
+        created_worker,
+):
+    """登录本次维修工账号，并设置后续请求的令牌。"""
+    response = worker_auth_api.login({
+        "username": created_worker["username"],
+        "password": created_worker["password"],
+    })
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    data = body["data"]
+    assert data["user"]["id"] == created_worker["id"]
+    assert data["user"]["username"] == created_worker["username"]
+
+    token = data["accessToken"]
+    assert isinstance(token, str)
+    assert token.strip(), "维修工登录准备失败：令牌为空"
+
+    worker_client.session.headers.update({
+        "Authorization": f"Bearer {token}",
+    })
+    return worker_client
+
+@pytest.fixture
+def worker_maintenance_api(logged_in_worker_client):
+    """提供已登录维修工身份的工单接口对象。"""
+    return WorkerMaintenanceApi(logged_in_worker_client)

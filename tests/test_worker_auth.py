@@ -61,3 +61,17 @@ def test_worker_profile_invalid_token_format(worker_auth_api):
     assert body["code"] == 401
     assert body["message"] == "无效的token格式"
     assert body.get("data") is None
+
+@pytest.mark.p1
+@allure.title("维修工使用错误密码登录时被拒绝")
+def test_worker_login_wrong_password(worker_auth_api, created_worker):
+    response = worker_auth_api.login({
+        "username": created_worker["username"],
+        "password": created_worker["password"] + "-wrong",
+    })
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "用户名或密码错误"
+    assert body.get("data") is None
