@@ -1,0 +1,16 @@
+- generic [ref=f10e3]:
+  - generic [ref=f10e5]:
+    - generic [ref=f10e6]:
+      - heading "我的工单" [level=1] [ref=f10e7]
+      - paragraph [ref=f10e8]: 处理中与已完成的工单
+    - tablist [ref=f10e11]:
+      - tab "处理中" [selected] [ref=f10e14] [cursor=pointer]
+      - tab "已完成" [ref=f10e16] [cursor=pointer]
+      - tab "全部" [ref=f10e18] [cursor=pointer]
+    - generic [ref=f10e19]:
+      - generic: 下拉刷新
+      - generic [ref=f10e21]: 暂无工单
+  - generic [ref=f10e33]:
+    - generic [ref=f10e34] [cursor=pointer]: 抢单
+    - generic [ref=f10e43] [cursor=pointer]: 我的工单
+    - generic [ref=f10e52] [cursor=pointer]: 我的
