@@ -28,12 +28,17 @@ from core.api_client import ApiClient
 from apis.auth_api import AuthApi
 from uuid import uuid4
 from apis.apartment_api import ApartmentApi
+from apis.notice_api import NoticeApi
 from apis.tenant_auth_api import TenantAuthApi
 from apis.lease_api import LeaseApi
 from datetime import datetime
 from apis.tenant_room_api import TenantRoomApi
+from apis.tenant_notice_api import TenantNoticeApi
 from apis.worker_auth_api import WorkerAuthApi
 from apis.role_api import RoleApi
+from apis.menu_api import MenuApi
+from apis.operation_log_api import OperationLogApi
+from apis.dashboard_api import DashboardApi
 
 from config import (
     BASE_URL,
@@ -212,6 +217,37 @@ def created_apartment_pair(admin_apartment_api):
 def admin_apartment_api(admin_client):
     """提供管理员身份的公寓接口对象。"""
     return ApartmentApi(admin_client)
+
+
+@pytest.fixture
+def admin_notice_api(admin_client):
+    """提供管理员身份的公告接口对象。"""
+    return NoticeApi(admin_client)
+
+
+@pytest.fixture
+def created_notice(admin_notice_api, created_apartment):
+    """创建一条本次测试专用草稿公告，结束后删除。"""
+    title = f"自动化公告-{uuid4().hex[:8]}"
+    content = f"自动化公告内容-{uuid4().hex[:8]}"
+    payload = {
+        "title": title,
+        "content": content,
+        "apartmentId": created_apartment["id"],
+    }
+    body = assert_response(admin_notice_api.create(payload))
+    notice_id = body["data"]["id"]
+    assert isinstance(notice_id, int) and notice_id > 0
+
+    try:
+        yield {
+            "id": notice_id,
+            "title": title,
+            "content": content,
+            "apartmentId": created_apartment["id"],
+        }
+    finally:
+        assert_true_response(admin_notice_api.delete(notice_id))
 
 
 @pytest.fixture
@@ -440,6 +476,14 @@ def logged_in_tenant_client(
 def tenant_room_api(logged_in_tenant_client):
     """为“我的房间”接口提供已登录租客身份，供后续业务测试使用。"""
     return TenantRoomApi(logged_in_tenant_client)
+
+
+@pytest.fixture
+def tenant_notice_api(logged_in_tenant_client):
+    """提供已登录租客身份的公告查询接口对象。"""
+    return TenantNoticeApi(logged_in_tenant_client)
+
+
 @pytest.fixture
 def tenant_maintenance_api(logged_in_tenant_client):
     """
@@ -532,6 +576,42 @@ def admin_role_api(admin_client):
 
 
 @pytest.fixture
+def admin_menu_api(admin_client):
+    """提供管理员身份的系统菜单查询接口对象。"""
+    return MenuApi(admin_client)
+
+
+@pytest.fixture
+def worker_menu_api(logged_in_worker_client):
+    """提供已登录维修工身份的系统菜单查询接口对象。"""
+    return MenuApi(logged_in_worker_client)
+
+
+@pytest.fixture
+def admin_operation_log_api(admin_client):
+    """提供管理员身份的操作日志查询接口对象。"""
+    return OperationLogApi(admin_client)
+
+
+@pytest.fixture
+def worker_operation_log_api(logged_in_worker_client):
+    """提供已登录维修工身份的操作日志查询接口对象。"""
+    return OperationLogApi(logged_in_worker_client)
+
+
+@pytest.fixture
+def admin_dashboard_api(admin_client):
+    """提供管理员身份的运营概览接口对象。"""
+    return DashboardApi(admin_client)
+
+
+@pytest.fixture
+def worker_dashboard_api(logged_in_worker_client):
+    """提供已登录维修工身份的运营概览接口对象。"""
+    return DashboardApi(logged_in_worker_client)
+
+
+@pytest.fixture
 def worker_role_id(admin_role_api):
     """根据维修工角色编码，查询实际角色 ID。"""
     response = admin_role_api.enabled()
@@ -557,6 +637,12 @@ def worker_role_id(admin_role_api):
 def admin_user_api(admin_client):
     """提供管理员身份的用户维护接口对象。"""
     return UserApi(admin_client)
+
+
+@pytest.fixture
+def worker_user_api(logged_in_worker_client):
+    """提供已登录维修工身份的用户维护接口对象。"""
+    return UserApi(logged_in_worker_client)
 
 
 @pytest.fixture

@@ -7,6 +7,14 @@ class RoleApi:
     def __init__(self, client):
         self.client = client
 
+    def page(self, **kwargs):
+        """分页查询角色，可通过 params 传入角色编码、状态等筛选项。"""
+        return self.client.request(
+            "GET",
+            "/system/role/page",
+            **kwargs
+        )
+
     def enabled(self):
         """查询所有启用的角色。"""
         return self.client.request(
