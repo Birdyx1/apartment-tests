@@ -92,3 +92,36 @@ def test_assigned_worker_accept_order_success(
     assert order["assigneeId"] == worker_id
     assert order["tenantId"] == created_maintenance["tenantId"]
     assert order["roomId"] == created_maintenance["roomId"]
+
+
+
+@pytest.mark.p0
+@allure.title("维修工不能接取指派给其他人的工单")
+def test_other_worker_cannot_accept_assigned_order(
+        created_maintenance,
+        created_worker,
+        created_second_worker,
+        admin_maintenance_api,
+        second_worker_maintenance_api,
+        tenant_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    assert created_worker["id"] != created_second_worker["id"]
+
+    # 管理员将工单派给 A。
+    response = admin_maintenance_api.assign(
+        order_id, created_worker["id"],
+    )
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # B 尝试接取派给 A 的工单。
+    response = second_worker_maintenance_api.accept(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "该工单未指派给你"
