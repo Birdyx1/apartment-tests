@@ -663,3 +663,91 @@ def uploaded_repair_image(
         yield data
     finally:
         minio_client.remove_object("apartment", object_key)
+
+@pytest.fixture
+def second_worker_payload(worker_payload):
+    """准备维修工 B 的独立账号数据。"""
+    payload = worker_payload.copy()
+    suffix = uuid4().hex[:8]
+
+    payload["username"] = f"auto_worker_b_{suffix}"
+    payload["email"] = f"auto_worker_b_{suffix}@example.com"
+    payload["phone"] = f"199{uuid4().int % 100000000:08d}"
+
+    return payload
+
+@pytest.fixture
+def created_second_worker(admin_user_api, second_worker_payload):
+    """创建维修工 B，测试结束后删除该账号。"""
+    response = admin_user_api.create(second_worker_payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    user_id = body["data"]["id"]
+    assert isinstance(user_id, int)
+    assert user_id > 0
+
+    try:
+        yield {
+            "id": user_id,
+            "username": second_worker_payload["username"],
+            "password": second_worker_payload["password"],
+        }
+    finally:
+        response = admin_user_api.delete(user_id)
+        assert response.status_code == 200
+
+        body = response.json()
+        assert body["code"] == 200, body.get("message")
+
+@pytest.fixture
+def second_worker_client(base_url, request_timeout):
+    """提供维修工 B 的独立会话，结束后关闭。"""
+    with requests.Session() as session:
+        yield ApiClient(
+            session=session,
+            base_url=base_url,
+            timeout=request_timeout,
+        )
+
+@pytest.fixture
+def logged_in_second_worker_client(
+        second_worker_client,
+        created_second_worker,
+):
+    """
+    取得 B 的账号 → 使用 B 的客户端登录 → 核对身份 → 保存 B 的令牌。
+    :param second_worker_client:
+    :param created_second_worker:
+    :return:
+    """
+    """登录维修工 B，并为 B 的客户端设置令牌。"""
+    auth_api = WorkerAuthApi(second_worker_client)
+    response = auth_api.login({
+        "username": created_second_worker["username"],
+        "password": created_second_worker["password"],
+    })
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    data = body["data"]
+    assert data["user"]["id"] == created_second_worker["id"]
+    assert data["user"]["username"] == created_second_worker["username"]
+
+    token = data["accessToken"]
+    assert isinstance(token, str)
+    assert token.strip(), "维修工 B 的令牌不能为空"
+
+    second_worker_client.session.headers.update({
+        "Authorization": f"Bearer {token}",
+    })
+    return second_worker_client
+
+@pytest.fixture
+def second_worker_maintenance_api(logged_in_second_worker_client):
+    """提供已登录维修工 B 身份的工单接口对象。"""
+    return WorkerMaintenanceApi(logged_in_second_worker_client)

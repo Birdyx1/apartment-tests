@@ -518,3 +518,98 @@ def test_worker_cannot_complete_cancelled_order(
     assert order["tenantId"] == created_maintenance["tenantId"]
     assert order["roomId"] == created_maintenance["roomId"]
 
+@pytest.mark.p0
+@allure.title("维修工不能完成其他维修工接取的工单")
+def test_worker_cannot_complete_other_worker_order(
+        created_maintenance,
+        worker_maintenance_api,
+        second_worker_maintenance_api,
+        uploaded_repair_image,
+        created_worker,
+        created_second_worker,
+):
+    order_id = created_maintenance["id"]
+    assert created_worker["id"] != created_second_worker["id"]
+
+    # A 抢单，使工单进入处理中。
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # B 尝试完成 A 的工单。
+    payload = {
+        "handlerRemark": "维修工 B 尝试完成 A 的工单",
+        "imageKeys": [uploaded_repair_image["objectKey"]],
+    }
+    response = second_worker_maintenance_api.complete(order_id, payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "只能完成自己接的工单"
+
+    # B 完工失败后，通过 A 查询工单。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 1
+    assert order["handlerId"] == created_worker["id"]
+    assert order["assigneeId"] == created_worker["id"]
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+@pytest.mark.p0
+@allure.title("维修工的工单详情与本人列表按处理人隔离")
+def test_worker_cannot_view_other_worker_order(
+        created_maintenance,
+        worker_maintenance_api,
+        second_worker_maintenance_api,
+        created_worker,
+        created_second_worker
+):
+    order_id = created_maintenance["id"]
+    assert created_worker["id"] != created_second_worker["id"]
+
+    # A 抢单。
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # B 尝试读取 A 的处理中工单。
+    response = second_worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "无权查看该工单"
+    assert body.get("data") is None, "拒绝访问时不应返回工单详情"
+
+    # B 的“本人列表”也不能出现 A 的工单。
+    response = second_worker_maintenance_api.list(
+        params={"tab": "mine"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    orders = body['data']
+    assert isinstance(orders, list)
+
+    order_ids = [order["id"] for order in orders]
+    assert order_id not in order_ids,"B 的“本人列表”不能包含 A 的工单"
+    for item in orders:
+        assert item["handlerId"] == created_second_worker["id"], (
+            "本人列表只能返回当前维修工接取的工单"
+        )
