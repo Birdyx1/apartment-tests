@@ -108,6 +108,7 @@ pipeline {
                 results: [[path: 'allure-results']]
             )
             archiveArtifacts artifacts: 'allure-results/**, ui-tests/playwright-report/**, ui-tests/test-results/**', allowEmptyArchive: true
+            sh 'rm -f ui-tests/tests/.auth/jenkins-admin.json'
         }
     }
 }
