@@ -235,8 +235,7 @@ def test_worker_cannot_complete_without_images(
 def test_worker_complete_order_success(
         created_maintenance,
         worker_maintenance_api,
-        worker_file_api,
-        repair_image_path,
+        uploaded_repair_image,
         created_worker,
         tenant_maintenance_api,
 ):
@@ -248,15 +247,8 @@ def test_worker_complete_order_success(
     assert body["data"] is True
 
     # 上传真实图片，取得完工请求所需图片Key。
-    response = worker_file_api.upload_image(repair_image_path)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    object_key = body["data"]["objectKey"]
-    assert isinstance(object_key, str)
-    assert object_key.strip(), "上传后的图片标识不能为空"
+    # fixture 已上传图片，并负责测试结束后的清理。
+    object_key = uploaded_repair_image["objectKey"]
 
     payload = {
         "handlerRemark":"已更换漏水管道，检查无渗漏",
@@ -322,3 +314,207 @@ def test_worker_complete_order_success(
     completed_order = matched[0]
     assert completed_order["status"] == 2
     assert completed_order["handlerId"] == created_worker["id"]
+
+
+@pytest.mark.p1
+@allure.title("已完成工单不能再次完工")
+def test_worker_cannot_complete_order_twice(
+        created_maintenance,
+        worker_maintenance_api,
+        uploaded_repair_image,
+        created_worker,
+):
+    """
+    已完成的工单不能再次完工，原处理结果不能被覆盖
+    :param created_maintenance:
+    :param worker_maintenance_api:
+    :param uploaded_repair_image:
+    :param created_worker:
+    :param tenant_maintenance_api:
+    :return:
+    """
+    order_id = created_maintenance["id"]
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 上传真实图片，取得完工请求所需图片Key。
+    # fixture 已上传图片，并负责测试结束后的清理。
+    object_key = uploaded_repair_image["objectKey"]
+
+    payload = {
+        "handlerRemark":"已更换漏水管道，检查无渗漏",
+        "imageKeys":[object_key]
+    }
+    response = worker_maintenance_api.complete(order_id, payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200
+    assert body["data"] is True
+    # 查询详情，确认工单真正完成，处理结果正确保存。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 2
+    assert order["handlerId"] == created_worker["id"]
+    assert order["assigneeId"] == created_worker["id"]
+
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+    assert order["handlerRemark"] == payload["handlerRemark"]
+    assert order["handleTime"], "完成工单后应记录处理时间"
+
+    before_order = order.copy()
+    # 使用不同备注再次提交，尝试覆盖原处理结果。
+    retry_payload = {
+        "handlerRemark": "第二次提交，尝试修改处理结果",
+        "imageKeys": [object_key],
+    }
+    response = worker_maintenance_api.complete(order_id, retry_payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅处理中工单可完成"
+
+    # 被拒绝后，重新查询并核对原数据。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    after_order = body["data"]
+    for field in (
+            "id", "status", "handlerId", "assigneeId",
+            "tenantId", "roomId", "handlerRemark", "handleTime",
+    ):
+        assert after_order[field] == before_order[field], (
+            f"重复完工被拒绝后，{field} 不应改变"
+        )
+
+@pytest.mark.p1
+@allure.title("维修工不能抢取已取消的工单")
+def test_worker_cannot_grab_cancelled_order(
+        created_maintenance,
+        tenant_maintenance_api,
+        worker_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    # 申请租客先取消工单。
+    response = tenant_maintenance_api.cancel(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 维修工尝试抢取已取消的工单，应被拒绝。
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅待处理工单可抢单"
+    """
+    抢单失败后，工单仍保持已取消
+    """
+
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 3
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+"""
+待处理工单不能跳过抢单，直接完工
+"""
+@pytest.mark.p1
+@allure.title("待处理工单不能直接完工")
+def test_worker_cannot_complete_pending_order(
+        created_maintenance,
+        worker_maintenance_api,
+        uploaded_repair_image,
+):
+    order_id = created_maintenance["id"]
+
+    # 提供有效备注和图片，但不抢单，工单仍为待处理。
+    payload = {
+        "handlerRemark": "尝试跳过抢单直接完工",
+        "imageKeys": [uploaded_repair_image["objectKey"]],
+    }
+    response = worker_maintenance_api.complete(order_id, payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅处理中工单可完成"
+    # 完工失败后，工单仍应保持待处理。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+
+"""
+已取消工单不能跳过抢单，直接完工
+"""
+@pytest.mark.p1
+@allure.title("已取消工单不能直接完工")
+def test_worker_cannot_complete_cancelled_order(
+        created_maintenance,
+        worker_maintenance_api,
+        uploaded_repair_image,
+        tenant_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    response = tenant_maintenance_api.cancel(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+    # 提供有效备注和图片，但不抢单，工单仍为待处理。
+    payload = {
+        "handlerRemark": "尝试完成已取消的工单",
+        "imageKeys": [uploaded_repair_image["objectKey"]],
+    }
+    response = worker_maintenance_api.complete(order_id, payload)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅处理中工单可完成"
+    # 完工失败后，工单仍应保持待处理。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 3
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
