@@ -35,8 +35,9 @@ pipeline {
                         rm -f "$archive"
                     fi
                     ln -sfn "$node_dir" "$cache_dir/node-24"
-                    "$cache_dir/node-24/bin/node" --version
-                    "$cache_dir/node-24/bin/npm" --version
+                    export PATH="$cache_dir/node-24/bin:$PATH"
+                    node --version
+                    npm --version
                 '''
             }
         }
