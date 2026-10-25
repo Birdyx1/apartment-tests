@@ -299,3 +299,26 @@ def test_worker_complete_order_success(
     assert tenant_order["status"] == 2
     assert tenant_order["handlerId"] == created_worker["id"]
     assert tenant_order["handlerRemark"] == payload["handlerRemark"]
+
+    # 查询本人已完成的工单。
+    """
+    tab="mine" 查询本人接过的工单，status=2 筛选其中已完成的工单
+    """
+    response = worker_maintenance_api.list(
+        params={"tab": "mine", "status": 2},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    orders = body['data']
+    assert isinstance(orders,list)
+    matched = [
+        item for item in orders
+        if item["id"] == order_id
+    ]
+    assert len(matched) == 1, "已完成列表应唯一包含本次工单"
+
+    completed_order = matched[0]
+    assert completed_order["status"] == 2
+    assert completed_order["handlerId"] == created_worker["id"]
