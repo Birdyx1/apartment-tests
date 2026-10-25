@@ -197,3 +197,170 @@ def test_assigned_worker_cannot_grab_order(
     assert order["assigneeId"] == worker_id
     assert order["tenantId"] == created_maintenance["tenantId"]
     assert order["roomId"] == created_maintenance["roomId"]
+
+@pytest.mark.p1
+@allure.title("管理员取消指派后工单保持待处理")
+def test_admin_cancel_assignment_success(
+        created_maintenance,
+        created_worker,
+        admin_maintenance_api,
+        tenant_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    worker_id = created_worker["id"]
+
+    # 管理员把工单指派给本次创建的维修工。
+    response = admin_maintenance_api.assign(order_id, worker_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 申请租客查询详情，核对派单结果。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+    # 取消指派只清空维修工，保留待处理工单。
+    response = admin_maintenance_api.assign(order_id, None)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 查询实际结果，确认指派人已清空。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] is None
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+@pytest.mark.p1
+@allure.title("处理中工单不能重新派单")
+def test_admin_cannot_reassign_processing_order(
+        created_maintenance,
+        created_worker,
+        admin_maintenance_api,
+        tenant_maintenance_api,
+        worker_maintenance_api,
+        created_second_worker
+):
+    order_id = created_maintenance["id"]
+    worker_id = created_worker["id"]
+
+    # 本用例独立准备派单，不能依赖上一条测试的工单或执行顺序。
+    response = admin_maintenance_api.assign(order_id, worker_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 派单只指定维修工，此时工单仍为待处理。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+    # 指定维修工接取管理员派来的工单。
+    response = worker_maintenance_api.accept(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 查询详情，确认已进入处理中。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 1
+    assert order["handlerId"] == worker_id
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+    assert created_worker["id"] != created_second_worker["id"]
+    # 工单已由 A 处理，管理员尝试重新派给 B。
+    response = admin_maintenance_api.assign(
+        order_id, created_second_worker["id"],
+    )
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅待处理工单可派单"
+
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 1
+    assert order["handlerId"] == worker_id
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+@pytest.mark.p1
+@allure.title("维修工不能接取未指派的工单")
+def test_worker_cannot_accept_unassigned_order(
+        created_maintenance,
+        worker_maintenance_api,
+
+):
+    order_id = created_maintenance["id"]
+
+
+    response = worker_maintenance_api.accept(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "该工单未指派给你"
+    # 完工失败后，工单仍应保持待处理。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]

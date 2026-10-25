@@ -14,6 +14,7 @@ from apis.admin_maintenance_api import AdminMaintenanceApi
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from apis.tenant_maintenance_api import TenantMaintenanceApi
+from apis.tenant_rent_api import TenantRentApi
 from apis.user_api import UserApi
 from apis.worker_file_api import WorkerFileApi
 from apis.worker_maintenance_api import WorkerMaintenanceApi
@@ -766,3 +767,77 @@ def admin_maintenance_api(admin_client):
     """
     return AdminMaintenanceApi(admin_client)
 
+@pytest.fixture
+def tenant_rent_api(logged_in_tenant_client):
+    """提供已登录租客身份的账单接口对象。
+        logged_in_tenant_client：提供租客令牌
+          ↓
+        tenant_rent_api：使用该身份查询账单
+    """
+    return TenantRentApi(logged_in_tenant_client)
+
+
+@pytest.fixture
+def tenant_lease_bill(created_lease, tenant_rent_api):
+    """取得本次入住的唯一账单；入住 fixture 负责后续退房。"""
+    response = tenant_rent_api.list_bills()
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert isinstance(body["data"], list)
+    matched = [
+        bill for bill in body["data"]
+        if bill["leaseId"] == created_lease["id"]
+    ]
+    assert len(matched) == 1, "应取得本次入住的唯一账单"
+    bill = matched[0]
+    assert type(bill["id"]) is int and bill["id"] > 0
+    assert bill["tenantId"] == created_lease["tenantId"]
+    assert bill["roomId"] == created_lease["roomId"]
+    assert bill["status"] in (0, 2)
+    return bill
+
+
+@pytest.fixture
+def created_second_tenant(admin_tenant_api):
+    """创建租客 B，用于验证其他租客账单的访问权限，结束后删除。"""
+    payload = {
+        "name": f"自动化租客B-{uuid4().hex[:8]}",
+        "gender": 1,
+        "phone": f"199{uuid4().int % 100000000:08d}",
+        "idCard": f"TEST{uuid4().hex[:14]}",
+        "password": "Tenant123!",
+    }
+    response = admin_tenant_api.create(payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    tenant_id = body["data"]["id"]
+    assert type(tenant_id) is int and tenant_id > 0
+    try:
+        yield {"id": tenant_id, "phone": payload["phone"], "password": payload["password"]}
+    finally:
+        response = admin_tenant_api.delete(tenant_id)
+        assert response.status_code == 200
+        body = response.json()
+        assert body["code"] == 200, body.get("message")
+
+
+@pytest.fixture
+def second_tenant_rent_api(created_second_tenant, base_url, request_timeout):
+    """使用 B 的独立会话登录，避免覆盖租客 A 的令牌。"""
+    with requests.Session() as session:
+        client = ApiClient(session, base_url, request_timeout)
+        response = TenantAuthApi(client).login({
+            "account": created_second_tenant["phone"],
+            "password": created_second_tenant["password"],
+        })
+        assert response.status_code == 200
+        body = response.json()
+        assert body["code"] == 200, body.get("message")
+        data = body["data"]
+        assert data["tenant"]["id"] == created_second_tenant["id"]
+        token = data["accessToken"]
+        assert isinstance(token, str) and token.strip()
+        session.headers.update({"Authorization": f"Bearer {token}"})
+        yield TenantRentApi(client)
