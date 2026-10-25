@@ -1,0 +1,122 @@
+- generic [ref=f1e15]:
+  - complementary [ref=f1e16]:
+    - generic [ref=f1e17]:
+      - generic [ref=f1e18]:
+        - img "dashboard" [ref=f1e20]
+        - strong [ref=f1e25]: 智能公寓系统
+      - menu [ref=f1e26]:
+        - menuitem "dashboard 工作台" [ref=f1e27] [cursor=pointer]:
+          - img "dashboard" [ref=f1e28]
+          - generic [ref=f1e31]: 工作台
+        - menuitem "setting 系统管理" [ref=f1e32] [cursor=pointer]:
+          - img "setting" [ref=f1e33]
+          - generic [ref=f1e36]: 系统管理
+        - menuitem "monitor 系统监控" [ref=f1e37] [cursor=pointer]:
+          - img "monitor" [ref=f1e38]
+          - generic [ref=f1e41]: 系统监控
+        - menuitem "home 公寓管理" [ref=f1e42] [cursor=pointer]:
+          - img "home" [ref=f1e43]
+          - generic [ref=f1e46]: 公寓管理
+  - generic [ref=f1e47]:
+    - banner [ref=f1e48]:
+      - button [ref=f1e50] [cursor=pointer]:
+        - img "menu-fold" [ref=f1e52]
+      - img "user" [ref=f1e57] [cursor=pointer]
+    - main [ref=f1e60]:
+      - generic [ref=f1e62]:
+        - generic [ref=f1e65]:
+          - generic [ref=f1e67]:
+            - generic "姓名" [ref=f1e69]: "姓名 :"
+            - textbox "姓名 :" [ref=f1e74]:
+              - /placeholder: 请输入姓名
+          - generic [ref=f1e77]:
+            - generic "性别" [ref=f1e79]: "性别 :"
+            - combobox "性别 :" [ref=f1e87] [cursor=pointer]
+          - generic [ref=f1e89]:
+            - generic "手机号" [ref=f1e91]: "手机号 :"
+            - textbox "手机号 :" [ref=f1e96]:
+              - /placeholder: 请输入手机号
+          - generic [ref=f1e99]:
+            - generic "身份证" [ref=f1e101]: "身份证 :"
+            - textbox "身份证 :" [ref=f1e106]:
+              - /placeholder: 请输入身份证号
+          - generic [ref=f1e113]:
+            - button "search 搜索" [ref=f1e115] [cursor=pointer]:
+              - img "search" [ref=f1e117]
+              - generic [ref=f1e120]: 搜索
+            - button "重 置" [ref=f1e122] [cursor=pointer]
+        - generic [ref=f1e125]:
+          - generic [ref=f1e127]:
+            - button "plus 新增租客" [ref=f1e129] [cursor=pointer]:
+              - img "plus" [ref=f1e131]
+              - generic [ref=f1e135]: 新增租客
+            - button "reload 刷新" [ref=f1e137] [cursor=pointer]:
+              - img "reload" [ref=f1e139]
+              - generic [ref=f1e142]: 刷新
+          - generic [ref=f1e146]:
+            - generic [ref=f1e148]:
+              - table [ref=f1e150]:
+                - rowgroup [ref=f1e158]:
+                  - row [ref=f1e159]:
+                    - columnheader "姓名" [ref=f1e160]
+                    - columnheader "性别" [ref=f1e161]
+                    - columnheader "手机号" [ref=f1e162]
+                    - columnheader "身份证" [ref=f1e163]
+                    - columnheader "更新时间" [ref=f1e164]
+                    - columnheader "操作" [ref=f1e165]
+              - table [ref=f1e167]:
+                - rowgroup [ref=f1e175]:
+                  - row [ref=f1e176]:
+                    - cell "自动化租客-52689f3e" [ref=f1e177]
+                    - cell "男" [ref=f1e178]
+                    - cell "199****1585" [ref=f1e179]
+                    - cell "TEST03****0449" [ref=f1e180]
+                    - cell [ref=f1e181]
+                    - cell [ref=f1e182]:
+                      - generic [ref=f1e183]:
+                        - button "edit 编辑" [ref=f1e185] [cursor=pointer]:
+                          - img "edit" [ref=f1e187]
+                          - generic [ref=f1e190]: 编辑
+                        - button "key 设置密码" [ref=f1e192] [cursor=pointer]:
+                          - img "key" [ref=f1e194]
+                          - generic [ref=f1e197]: 设置密码
+                        - button "key 重置密码" [ref=f1e199] [cursor=pointer]:
+                          - img "key" [ref=f1e201]
+                          - generic [ref=f1e204]: 重置密码
+                        - button "delete 删除" [ref=f1e206] [cursor=pointer]:
+                          - img "delete" [ref=f1e208]
+                          - generic [ref=f1e211]: 删除
+                  - row [ref=f1e212]:
+                    - cell "自动化租客-4ad998b3" [ref=f1e213]
+                    - cell "男" [ref=f1e214]
+                    - cell "199****3980" [ref=f1e215]
+                    - cell "TEST46****764f" [ref=f1e216]
+                    - cell [ref=f1e217]
+                    - cell [ref=f1e218]:
+                      - generic [ref=f1e219]:
+                        - button "edit 编辑" [ref=f1e221] [cursor=pointer]:
+                          - img "edit" [ref=f1e223]
+                          - generic [ref=f1e226]: 编辑
+                        - button "key 设置密码" [ref=f1e228] [cursor=pointer]:
+                          - img "key" [ref=f1e230]
+                          - generic [ref=f1e233]: 设置密码
+                        - button "key 重置密码" [ref=f1e235] [cursor=pointer]:
+                          - img "key" [ref=f1e237]
+                          - generic [ref=f1e240]: 重置密码
+                        - button "delete 删除" [ref=f1e242] [cursor=pointer]:
+                          - img "delete" [ref=f1e244]
+                          - generic [ref=f1e247]: 删除
+            - list [ref=f1e248]:
+              - listitem [ref=f1e249]: 第 1-2 条/共 2 条
+              - listitem "上一页" [ref=f1e250]:
+                - button [disabled] [ref=f1e251]:
+                  - img "left" [ref=f1e252]
+              - listitem "1" [ref=f1e255] [cursor=pointer]
+              - listitem "下一页" [ref=f1e257]:
+                - button [disabled] [ref=f1e258]:
+                  - img "right" [ref=f1e259]
+              - listitem [ref=f1e262]:
+                - generic "页码" [ref=f1e263] [cursor=pointer]:
+                  - generic [ref=f1e265]:
+                    - combobox "页码" [ref=f1e267]
+                    - generic "10 条/页" [ref=f1e268]

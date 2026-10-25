@@ -1,0 +1,88 @@
+- generic [ref=f7e1]:
+  - generic [ref=f7e15]:
+    - complementary [ref=f7e16]:
+      - generic [ref=f7e17]:
+        - generic [ref=f7e18]:
+          - img "dashboard" [ref=f7e20]
+          - strong [ref=f7e25]: 智能公寓系统
+        - menu [ref=f7e26]:
+          - menuitem "dashboard 工作台" [ref=f7e27] [cursor=pointer]:
+            - img "dashboard" [ref=f7e28]
+            - generic [ref=f7e31]: 工作台
+          - menuitem "setting 系统管理" [ref=f7e32] [cursor=pointer]:
+            - img "setting" [ref=f7e33]
+            - generic [ref=f7e36]: 系统管理
+          - menuitem "monitor 系统监控" [ref=f7e37] [cursor=pointer]:
+            - img "monitor" [ref=f7e38]
+            - generic [ref=f7e41]: 系统监控
+          - menuitem "home 公寓管理" [ref=f7e42] [cursor=pointer]:
+            - img "home" [ref=f7e43]
+            - generic [ref=f7e46]: 公寓管理
+    - generic [ref=f7e47]:
+      - banner [ref=f7e48]:
+        - button [ref=f7e50] [cursor=pointer]:
+          - img "menu-fold" [ref=f7e52]
+        - img "user" [ref=f7e57] [cursor=pointer]
+      - main [ref=f7e60]:
+        - generic [ref=f7e64]:
+          - generic [ref=f7e66]:
+            - button "plus 申请维修工单" [ref=f7e68] [cursor=pointer]:
+              - img "plus" [ref=f7e70]
+              - generic [ref=f7e74]: 申请维修工单
+            - button "reload 刷新" [ref=f7e76] [cursor=pointer]:
+              - img "reload" [ref=f7e78]
+              - generic [ref=f7e81]: 刷新
+          - generic [ref=f7e87]:
+            - table [ref=f7e89]:
+              - rowgroup [ref=f7e100]:
+                - row [ref=f7e101]:
+                  - columnheader "房间" [ref=f7e102]
+                  - columnheader "租客" [ref=f7e103]
+                  - columnheader "标题" [ref=f7e104]
+                  - columnheader "描述" [ref=f7e105]
+                  - columnheader "紧急程度" [ref=f7e106]
+                  - columnheader "状态" [ref=f7e107]
+                  - columnheader "处理备注" [ref=f7e108]
+                  - columnheader "申请时间" [ref=f7e109]
+                  - columnheader "操作" [ref=f7e110]
+            - table [ref=f7e112]:
+              - rowgroup [ref=f7e123]:
+                - row [ref=f7e124]:
+                  - cell "暂无数据 暂无数据" [ref=f7e125]:
+                    - generic [ref=f7e127]:
+                      - img "暂无数据" [ref=f7e129]
+                      - generic [ref=f7e135]: 暂无数据
+  - generic [ref=f7e136]:
+    - dialog "申请维修工单":
+      - generic [ref=f7e137]:
+        - button "Close" [ref=f7e138] [cursor=pointer]:
+          - generic "关闭" [ref=f7e139]:
+            - img "close" [ref=f7e140]
+        - generic [ref=f7e143]: 申请维修工单
+        - generic [ref=f7e146]:
+          - generic [ref=f7e148]:
+            - generic "租客" [ref=f7e150]: "* 租客"
+            - generic [ref=f7e156]:
+              - combobox "* 租客" [ref=f7e158]
+              - generic: 搜索租客
+          - generic [ref=f7e160]:
+            - generic "工单标题" [ref=f7e162]: "* 工单标题"
+            - textbox "* 工单标题" [ref=f7e166]:
+              - /placeholder: 请输入工单标题
+          - generic [ref=f7e168]:
+            - generic "问题描述" [ref=f7e170]
+            - textbox "问题描述" [ref=f7e174]:
+              - /placeholder: 请详细描述需要维修的问题
+          - generic [ref=f7e176]:
+            - generic "紧急程度" [ref=f7e178]: "* 紧急程度"
+            - generic [ref=f7e184] [cursor=pointer]:
+              - combobox "* 紧急程度" [ref=f7e186]
+              - generic: 选择紧急程度
+          - generic [ref=f7e188]:
+            - generic "现场照片（最多6张）" [ref=f7e190]
+            - generic [ref=f7e198] [cursor=pointer]:
+              - img "plus" [ref=f7e199]
+              - generic [ref=f7e203]: 上传
+        - generic [ref=f7e204]:
+          - button "取 消" [ref=f7e205] [cursor=pointer]
+          - button "确 定" [ref=f7e207] [cursor=pointer]

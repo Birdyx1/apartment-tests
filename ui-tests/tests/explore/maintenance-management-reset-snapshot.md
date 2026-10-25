@@ -1,0 +1,101 @@
+- generic [ref=f6e15]:
+  - complementary [ref=f6e16]:
+    - generic [ref=f6e17]:
+      - generic [ref=f6e18]:
+        - img "dashboard" [ref=f6e20]
+        - strong [ref=f6e25]: 智能公寓系统
+      - menu [ref=f6e26]:
+        - menuitem "dashboard 工作台" [ref=f6e27] [cursor=pointer]:
+          - img "dashboard" [ref=f6e28]
+          - generic [ref=f6e31]: 工作台
+        - menuitem "setting 系统管理" [ref=f6e32] [cursor=pointer]:
+          - img "setting" [ref=f6e33]
+          - generic [ref=f6e36]: 系统管理
+        - menuitem "monitor 系统监控" [ref=f6e37] [cursor=pointer]:
+          - img "monitor" [ref=f6e38]
+          - generic [ref=f6e41]: 系统监控
+        - menuitem "home 公寓管理" [ref=f6e42] [cursor=pointer]:
+          - img "home" [ref=f6e43]
+          - generic [ref=f6e46]: 公寓管理
+  - generic [ref=f6e47]:
+    - banner [ref=f6e48]:
+      - button [ref=f6e50] [cursor=pointer]:
+        - img "menu-fold" [ref=f6e52]
+      - img "user" [ref=f6e57] [cursor=pointer]
+    - main [ref=f6e60]:
+      - generic [ref=f6e62]:
+        - generic [ref=f6e65]:
+          - generic [ref=f6e241]:
+            - generic "房间" [ref=f6e243]: "房间 :"
+            - generic [ref=f6e249]:
+              - combobox "房间 :" [ref=f6e251]
+              - generic: 搜索房间
+          - generic [ref=f6e253]:
+            - generic "租客" [ref=f6e255]: "租客 :"
+            - generic [ref=f6e261]:
+              - combobox "租客 :" [ref=f6e263]
+              - generic: 搜索租客
+          - generic [ref=f6e265]:
+            - generic "状态" [ref=f6e267]: "状态 :"
+            - combobox "状态 :" [ref=f6e275] [cursor=pointer]
+          - generic [ref=f6e277]:
+            - generic "紧急程度" [ref=f6e279]: "紧急程度 :"
+            - combobox "紧急程度 :" [ref=f6e287] [cursor=pointer]
+          - generic [ref=f6e119]:
+            - button "search 搜索" [ref=f6e121] [cursor=pointer]:
+              - img "search" [ref=f6e123]
+              - generic [ref=f6e126]: 搜索
+            - button "重 置" [active] [ref=f6e128] [cursor=pointer]
+        - generic [ref=f6e131]:
+          - button "reload 刷新" [ref=f6e133] [cursor=pointer]:
+            - img "reload" [ref=f6e289]
+            - generic [ref=f6e138]: 刷新
+          - generic [ref=f6e142]:
+            - generic [ref=f6e144]:
+              - table [ref=f6e146]:
+                - rowgroup [ref=f6e158]:
+                  - row [ref=f6e159]:
+                    - columnheader "房间" [ref=f6e160]
+                    - columnheader "租客" [ref=f6e161]
+                    - columnheader "标题" [ref=f6e162]
+                    - columnheader "描述" [ref=f6e163]
+                    - columnheader "紧急程度" [ref=f6e164]
+                    - columnheader "状态" [ref=f6e165]
+                    - columnheader "指派" [ref=f6e166]
+                    - columnheader "处理备注" [ref=f6e167]
+                    - columnheader "申请时间" [ref=f6e168]
+                    - columnheader "操作" [ref=f6e169]
+              - table [ref=f6e171]:
+                - rowgroup [ref=f6e183]:
+                  - row [ref=f6e292]:
+                    - cell "自动化公寓2fbef137 · 自动化房间-61121d9a" [ref=f6e293]
+                    - cell "自动化租客-52689f3e" [ref=f6e294]
+                    - cell "自动化报修-6aa9d186" [ref=f6e295]
+                    - cell "卫生间水管漏水" [ref=f6e296]
+                    - cell "普通" [ref=f6e297]
+                    - cell "已取消" [ref=f6e299]
+                    - cell "未派" [ref=f6e301]
+                    - cell [ref=f6e302]
+                    - cell "2026-10-25 20:12:22" [ref=f6e303]
+                    - cell [ref=f6e304]:
+                      - button "详情" [ref=f6e307] [cursor=pointer]
+                  - row [ref=f6e309]:
+                    - cell "自动化公寓4d532037 · 自动化房间-01583dc0" [ref=f6e310]
+                    - cell "自动化租客-4ad998b3" [ref=f6e311]
+                    - cell "自动化报修-7beb3c5f" [ref=f6e312]
+                    - cell "卫生间水管漏水" [ref=f6e313]
+                    - cell "普通" [ref=f6e314]
+                    - cell "已取消" [ref=f6e316]
+                    - cell "未派" [ref=f6e318]
+                    - cell [ref=f6e319]
+                    - cell "2026-10-25 20:12:19" [ref=f6e320]
+                    - cell [ref=f6e321]:
+                      - button "详情" [ref=f6e324] [cursor=pointer]
+            - list [ref=f6e326]:
+              - listitem "上一页" [ref=f6e327]:
+                - button [disabled] [ref=f6e328]:
+                  - img "left" [ref=f6e329]
+              - listitem "1" [ref=f6e332] [cursor=pointer]
+              - listitem "下一页" [ref=f6e334]:
+                - button [disabled] [ref=f6e335]:
+                  - img "right" [ref=f6e336]

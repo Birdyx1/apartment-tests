@@ -1,0 +1,171 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e15]:
+    - complementary [ref=f1e16]:
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]:
+          - img "dashboard" [ref=f1e20]
+          - strong [ref=f1e25]: 智能公寓系统
+        - menu [ref=f1e26]:
+          - menuitem "dashboard 工作台" [ref=f1e27] [cursor=pointer]:
+            - img "dashboard" [ref=f1e28]
+            - generic [ref=f1e31]: 工作台
+          - menuitem "setting 系统管理" [ref=f1e32] [cursor=pointer]:
+            - img "setting" [ref=f1e33]
+            - generic [ref=f1e36]: 系统管理
+          - menuitem "monitor 系统监控" [ref=f1e37] [cursor=pointer]:
+            - img "monitor" [ref=f1e38]
+            - generic [ref=f1e41]: 系统监控
+          - menuitem "home 公寓管理" [ref=f1e42] [cursor=pointer]:
+            - img "home" [ref=f1e43]
+            - generic [ref=f1e46]: 公寓管理
+    - generic [ref=f1e47]:
+      - banner [ref=f1e48]:
+        - button [ref=f1e50] [cursor=pointer]:
+          - img "menu-fold" [ref=f1e52]
+        - img "user" [ref=f1e57] [cursor=pointer]
+      - main [ref=f1e60]:
+        - generic [ref=f1e62]:
+          - generic [ref=f1e65]:
+            - generic [ref=f1e67]:
+              - generic "公寓" [ref=f1e69]: "公寓 :"
+              - generic [ref=f1e75]:
+                - 'combobox "公寓 : * 公寓" [ref=f1e261]'
+                - generic: 搜索公寓
+            - generic [ref=f1e79]:
+              - generic "房间号" [ref=f1e81]: "房间号 :"
+              - 'textbox "房间号 : * 房间号" [ref=f1e262]':
+                - /placeholder: 如 2-301
+            - generic [ref=f1e89]:
+              - generic "楼层" [ref=f1e91]: "楼层 :"
+              - generic [ref=f1e95]:
+                - generic:
+                  - button "Increase Value" [ref=f1e96] [cursor=pointer]:
+                    - img "up" [ref=f1e97]
+                  - button "Decrease Value" [ref=f1e100] [cursor=pointer]:
+                    - img "down" [ref=f1e101]
+                - 'spinbutton "楼层 : * 楼层" [ref=f1e263]'
+            - generic [ref=f1e107]:
+              - generic "状态" [ref=f1e109]: "状态 :"
+              - 'combobox "状态 : * 状态" [ref=f1e264] [cursor=pointer]'
+            - generic [ref=f1e123]:
+              - button "search 搜索" [ref=f1e125] [cursor=pointer]:
+                - img "search" [ref=f1e127]
+                - generic [ref=f1e130]: 搜索
+              - button "重 置" [ref=f1e132] [cursor=pointer]
+          - generic [ref=f1e135]:
+            - generic [ref=f1e137]:
+              - button "plus 新增房间" [ref=f1e139] [cursor=pointer]:
+                - img "plus" [ref=f1e141]
+                - generic [ref=f1e145]: 新增房间
+              - button "reload 刷新" [ref=f1e147] [cursor=pointer]:
+                - img "reload" [ref=f1e149]
+                - generic [ref=f1e152]: 刷新
+            - generic [ref=f1e156]:
+              - generic [ref=f1e158]:
+                - table [ref=f1e160]:
+                  - rowgroup [ref=f1e170]:
+                    - row [ref=f1e171]:
+                      - columnheader "公寓" [ref=f1e172]
+                      - columnheader "房间号" [ref=f1e173]
+                      - columnheader "楼层" [ref=f1e174]
+                      - columnheader "户型" [ref=f1e175]
+                      - columnheader "面积(㎡)" [ref=f1e176]
+                      - columnheader "状态" [ref=f1e177]
+                      - columnheader "更新时间" [ref=f1e178]
+                      - columnheader "操作" [ref=f1e179]
+                - table [ref=f1e181]:
+                  - rowgroup [ref=f1e191]:
+                    - row [ref=f1e192]:
+                      - cell "自动化公寓2fbef137" [ref=f1e193]
+                      - cell "自动化房间-61121d9a" [ref=f1e194]
+                      - cell "1" [ref=f1e195]
+                      - cell "一室一厅" [ref=f1e196]
+                      - cell [ref=f1e197]
+                      - cell "空置" [ref=f1e198]
+                      - cell "2026-10-25 20:12:22" [ref=f1e199]
+                      - cell [ref=f1e200]:
+                        - generic [ref=f1e201]:
+                          - button "edit 编辑" [ref=f1e203] [cursor=pointer]:
+                            - img "edit" [ref=f1e205]
+                            - generic [ref=f1e208]: 编辑
+                          - button "delete 删除" [ref=f1e210] [cursor=pointer]:
+                            - img "delete" [ref=f1e212]
+                            - generic [ref=f1e215]: 删除
+                    - row [ref=f1e216]:
+                      - cell "自动化公寓4d532037" [ref=f1e217]
+                      - cell "自动化房间-01583dc0" [ref=f1e218]
+                      - cell "1" [ref=f1e219]
+                      - cell "一室一厅" [ref=f1e220]
+                      - cell [ref=f1e221]
+                      - cell "空置" [ref=f1e222]
+                      - cell "2026-10-25 20:12:19" [ref=f1e223]
+                      - cell [ref=f1e224]:
+                        - generic [ref=f1e225]:
+                          - button "edit 编辑" [ref=f1e227] [cursor=pointer]:
+                            - img "edit" [ref=f1e229]
+                            - generic [ref=f1e232]: 编辑
+                          - button "delete 删除" [ref=f1e234] [cursor=pointer]:
+                            - img "delete" [ref=f1e236]
+                            - generic [ref=f1e239]: 删除
+              - list [ref=f1e240]:
+                - listitem [ref=f1e241]: 第 1-2 条/共 2 条
+                - listitem "上一页" [ref=f1e242]:
+                  - button [disabled] [ref=f1e243]:
+                    - img "left" [ref=f1e244]
+                - listitem "1" [ref=f1e247] [cursor=pointer]
+                - listitem "下一页" [ref=f1e249]:
+                  - button [disabled] [ref=f1e250]:
+                    - img "right" [ref=f1e251]
+                - listitem [ref=f1e254]:
+                  - generic "页码" [ref=f1e255] [cursor=pointer]:
+                    - generic [ref=f1e257]:
+                      - combobox "页码" [ref=f1e259]
+                      - generic "10 条/页" [ref=f1e260]
+  - generic [ref=f1e401]:
+    - dialog "新增房间":
+      - generic [ref=f1e402]:
+        - button "Close" [ref=f1e403] [cursor=pointer]:
+          - generic "关闭" [ref=f1e404]:
+            - img "close" [ref=f1e405]
+        - generic [ref=f1e408]: 新增房间
+        - generic [ref=f1e411]:
+          - generic [ref=f1e413]:
+            - generic "公寓" [ref=f1e415]: "* 公寓"
+            - generic [ref=f1e421]:
+              - combobox [ref=f1e423]
+              - generic: 搜索公寓
+          - generic [ref=f1e425]:
+            - generic "房间号" [ref=f1e427]: "* 房间号"
+            - textbox [ref=f1e431]
+          - generic [ref=f1e433]:
+            - generic "楼层" [ref=f1e435]: "* 楼层"
+            - generic [ref=f1e439]:
+              - generic:
+                - button "Increase Value" [ref=f1e440] [cursor=pointer]:
+                  - img "up" [ref=f1e441]
+                - button "Decrease Value" [ref=f1e444] [cursor=pointer]:
+                  - img "down" [ref=f1e445]
+              - spinbutton [ref=f1e449]
+          - generic [ref=f1e451]:
+            - generic "户型" [ref=f1e453]: "* 户型"
+            - generic [ref=f1e459] [cursor=pointer]:
+              - combobox "* 户型" [ref=f1e461]
+              - generic: 请选择户型
+          - generic [ref=f1e463]:
+            - generic "面积(㎡)" [ref=f1e465]: "* 面积(㎡)"
+            - generic [ref=f1e469]:
+              - generic:
+                - button "Increase Value" [ref=f1e470] [cursor=pointer]:
+                  - img "up" [ref=f1e471]
+                - button "Decrease Value" [ref=f1e474] [cursor=pointer]:
+                  - img "down" [ref=f1e475]
+              - spinbutton "* 面积(㎡)" [ref=f1e479]
+          - generic [ref=f1e481]:
+            - generic "状态" [ref=f1e483]: "* 状态"
+            - combobox [ref=f1e491] [cursor=pointer]
+          - generic [ref=f1e493]:
+            - generic "描述" [ref=f1e495]
+            - textbox "描述" [ref=f1e499]
+        - generic [ref=f1e500]:
+          - button "取 消" [ref=f1e501] [cursor=pointer]
+          - button "确 定" [ref=f1e503] [cursor=pointer]
