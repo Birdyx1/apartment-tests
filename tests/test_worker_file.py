@@ -1,6 +1,29 @@
+from urllib.parse import urlsplit, urlunsplit
+
 import allure
 import pytest
 import requests
+
+from config import MINIO_PUBLIC_ORIGIN
+
+
+def _image_url_for_current_environment(image_url):
+    """按当前运行环境替换图片 URL 的 origin，保留对象路径与查询参数。"""
+    if not MINIO_PUBLIC_ORIGIN:
+        return image_url
+
+    original_url = urlsplit(image_url)
+    public_origin = urlsplit(MINIO_PUBLIC_ORIGIN)
+    assert public_origin.scheme in {"http", "https"} and public_origin.netloc, (
+        "APARTMENT_MINIO_PUBLIC_ORIGIN 必须是包含协议和主机的 URL"
+    )
+    return urlunsplit((
+        public_origin.scheme,
+        public_origin.netloc,
+        original_url.path,
+        original_url.query,
+        original_url.fragment,
+    ))
 
 
 @pytest.mark.p1
@@ -19,6 +42,9 @@ def test_worker_upload_image_success(
 
     assert isinstance(image_url, str)
     assert image_url.strip(), "图片访问地址不能为空"
+
+    # Jenkins 容器内的 localhost 指向 Jenkins 自身；替换为容器可达的 origin。
+    image_url = _image_url_for_current_environment(image_url)
 
     image_response = requests.get(image_url, timeout=10)
     assert image_response.status_code == 200

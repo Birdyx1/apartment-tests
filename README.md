@@ -35,6 +35,7 @@ python -m pytest --collect-only -q
 | 环境变量 | 默认值 | 用途 |
 |---|---|---|
 | `APARTMENT_MINIO_ENDPOINT` | `localhost:9000` | MinIO 服务地址 |
+| `APARTMENT_MINIO_PUBLIC_ORIGIN` | 空 | 覆盖后端返回图片 URL 的协议和主机；保留对象路径，供容器内测试访问 |
 | `APARTMENT_MINIO_ACCESS_KEY` | `minioadmin` | MinIO 访问账号 |
 | `APARTMENT_MINIO_SECRET_KEY` | `minioadmin` | MinIO 访问密钥 |
 | `APARTMENT_MINIO_BUCKET` | `apartment` | 测试图片所在桶 |
@@ -47,6 +48,7 @@ python -m pytest --collect-only -q
 ```bash
 APARTMENT_BASE_URL="http://test-api.example:8080" \
 APARTMENT_MINIO_ENDPOINT="test-minio.example:9000" \
+APARTMENT_MINIO_PUBLIC_ORIGIN="http://test-minio.example:9000" \
 APARTMENT_MINIO_ACCESS_KEY="your-access-key" \
 APARTMENT_MINIO_SECRET_KEY="your-secret-key" \
 APARTMENT_MINIO_BUCKET="apartment-test" \
