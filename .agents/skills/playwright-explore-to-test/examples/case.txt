@@ -1,0 +1,6 @@
+标题: 用户登录
+URL: https://playwright.dev/
+
+1. 打开 https://playwright.dev/
+2. 点击 Get started 链接
+3. 验证页面显示 Installation

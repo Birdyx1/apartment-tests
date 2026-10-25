@@ -16,6 +16,18 @@ Read the relevant current files before deciding what is missing or making change
 - Test framework: `config.py`, `conftest.py`, `apis/`, `core/`, `helpers/`, `tests/`, `pytest.ini`, and `requirements.txt`.
 - Learning history and known issues: the parent `WIKI.md`, plus relevant project docs such as `docs/ai-test-pilot/apartment-api-matrix.md`.
 
+## Use MCP as an evidence source
+
+Discover the MCP tools available in the current session before planning an integration; tool availability varies by host. For this project, browser/network observation is the most direct MCP aid for API testing:
+
+- Use an available Playwright MCP to open the local frontend, inspect the accessible UI, and list filtered network requests when a user flow or request contract is unclear. Treat browser traffic as **observed runtime behavior**, not approved expected behavior; compare it with the API document, backend controller/DTO, and human-confirmed requirement.
+- Prefer request summaries (method, path, status). Do not read authorization headers, cookies, captcha payloads, or full network bodies by default. If a body is necessary to identify a field, inspect only the minimum relevant data and redact credentials, personal data, and tokens before recording it.
+- Use a source-control/CI MCP only when a concrete PR or build is in scope. Report its revision and build identity; do not treat stale diagnostics as current.
+- A database MCP is optional and is not a replacement for API assertions. Only use it when the user has identified an isolated test database and the task requires read-only data context. Default to no SQL mutation, no production access, and no database-based expected result unless the product contract explicitly requires it.
+- Record which fact came from MCP and when it was observed. MCP calls can accelerate discovery and evidence collection, but test plans, expected outcomes, destructive actions, and code changes remain subject to the project guardrails below.
+
+See `docs/ai-test-pilot/mcp-test-workflow.md` for the current project mapping and a verified local browser-to-API example.
+
 Paths may differ. Discover them rather than assuming they exist. Recheck source files before relying on an older matrix or Wiki entry.
 
 ## Keep expected behavior evidence-based

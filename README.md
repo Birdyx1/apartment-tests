@@ -1,6 +1,6 @@
 # 公寓接口自动化测试
 
-Python + Pytest + Requests + Allure。当前 78 条测试，覆盖三角色认证、基础资料、入住/报修、派单/接单、抢单/完工、上传、账单模拟支付及基础权限。2026-10-25 重复代码整理后全量为 **75 passed、3 failed（34.50s）**，无后置 ERROR。失败为保留的 D03 与 D04 两种登录顺序专项；未修改后端或跳过测试。
+Python + Pytest + Requests + Allure。当前收集 110 条测试，覆盖三角色认证、核心租住/维修/账单链路、系统管理、权限和跨账号场景。2026-10-25 最新全量为 **105 passed、5 failed（53.94s）**；失败是保留的 D03、D04 以及用户接口响应包含 `password` 字段的缺陷回归，没有修改后端或跳过测试。测试状态和覆盖评估见上级目录 `WIKI.md` 与 `docs/ai-test-pilot/project-wide-api-test-assessment.md`。
 
 公共代码分工见 [重复代码简化说明](docs/重复代码简化说明.md)。
 
@@ -101,6 +101,10 @@ npm install --prefix .tools allure-commandline@2
 ```
 
 清理选项仅针对指定报告目录。报告是生成产物，默认不提交 Git。
+
+## AI / MCP 辅助接口测试
+
+项目 Skill 会在当前会话发现可用 MCP。Playwright MCP 可用于本地页面和 API 网络请求发现；目前已观测到登录页加载验证码接口返回 HTTP 200，但该运行观测不代表已确认业务预期。MCP 使用范围、敏感信息边界和测试闭环见 [MCP 辅助接口测试工作流](docs/ai-test-pilot/mcp-test-workflow.md)。
 
 ## 已知覆盖范围
 
