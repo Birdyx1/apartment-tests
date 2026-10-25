@@ -1,5 +1,26 @@
+
+from core.assertions import assert_response, assert_true_response
+from helpers.maintenance import assert_order_identity, assert_worker_assignment
 import allure
 import pytest
+
+
+
+
+def _assign_and_check(admin_api, tenant_api, source, worker_id):
+    """每条场景独立派单，并确认状态仍为待处理。"""
+    assert_true_response(admin_api.assign(source["id"], worker_id))
+    order = assert_response(tenant_api.detail(source["id"]))["data"]
+    assert_order_identity(order, source, status=0)
+    assert order["assigneeId"] == worker_id
+
+
+def _accept_and_check(worker_api, source, worker_id):
+    """指定维修工接单后，核对状态和实际处理人。"""
+    assert_true_response(worker_api.accept(source["id"]))
+    order = assert_response(worker_api.detail(source["id"]))["data"]
+    assert_order_identity(order, source, status=1)
+    assert_worker_assignment(order, worker_id)
 
 
 @pytest.mark.p0
@@ -12,28 +33,7 @@ def test_admin_assign_order_success(
 ):
     order_id = created_maintenance["id"]
     worker_id = created_worker["id"]
-
-    # 管理员把工单指派给本次创建的维修工。
-    response = admin_maintenance_api.assign(order_id, worker_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 申请租客查询详情，核对派单结果。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
 
 
 @pytest.mark.p0
@@ -47,51 +47,8 @@ def test_assigned_worker_accept_order_success(
 ):
     order_id = created_maintenance["id"]
     worker_id = created_worker["id"]
-
-    # 本用例独立准备派单，不能依赖上一条测试的工单或执行顺序。
-    response = admin_maintenance_api.assign(order_id, worker_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 派单只指定维修工，此时工单仍为待处理。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
-
-    # 指定维修工接取管理员派来的工单。
-    response = worker_maintenance_api.accept(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 查询详情，确认已进入处理中。
-    response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == worker_id
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
+    _accept_and_check(worker_maintenance_api, created_maintenance, worker_id)
 
 
 
@@ -106,39 +63,14 @@ def test_other_worker_cannot_accept_assigned_order(
         tenant_maintenance_api,
 ):
     order_id = created_maintenance["id"]
-    assert created_worker["id"] != created_second_worker["id"]
-
-    # 管理员将工单派给 A。
-    response = admin_maintenance_api.assign(
-        order_id, created_worker["id"],
-    )
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # B 尝试接取派给 A 的工单。
-    response = second_worker_maintenance_api.accept(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    worker_id = created_worker["id"]
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
+    assert worker_id != created_second_worker["id"]
+    body = assert_response(second_worker_maintenance_api.accept(order_id), code=500)
     assert body["message"] == "该工单未指派给你"
-
-    # B 接单失败后，查询工单是否保持原状态和指派人。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == created_worker["id"]
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    order = assert_response(tenant_maintenance_api.detail(order_id))["data"]
+    assert_order_identity(order, created_maintenance, status=0)
+    assert order["assigneeId"] == worker_id
 
 
 
@@ -154,49 +86,12 @@ def test_assigned_worker_cannot_grab_order(
 ):
     order_id = created_maintenance["id"]
     worker_id = created_worker["id"]
-
-    # 管理员把工单指派给本次创建的维修工。
-    response = admin_maintenance_api.assign(order_id, worker_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 申请租客查询详情，核对派单结果。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
+    body = assert_response(worker_maintenance_api.grab(order_id), code=500)
+    assert body["message"] == "该工单已指派，无法抢单"
+    order = assert_response(tenant_maintenance_api.detail(order_id))["data"]
+    assert_order_identity(order, created_maintenance, status=0)
     assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
-
-
-    response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500, body.get("message")
-    assert body['message'] == '该工单已指派，无法抢单'
-
-    # 抢单失败后，工单仍保持待处理及原指派人。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
 
 @pytest.mark.p1
 @allure.title("管理员取消指派后工单保持待处理")
@@ -208,49 +103,12 @@ def test_admin_cancel_assignment_success(
 ):
     order_id = created_maintenance["id"]
     worker_id = created_worker["id"]
-
-    # 管理员把工单指派给本次创建的维修工。
-    response = admin_maintenance_api.assign(order_id, worker_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 申请租客查询详情，核对派单结果。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
-
-    # 取消指派只清空维修工，保留待处理工单。
-    response = admin_maintenance_api.assign(order_id, None)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 查询实际结果，确认指派人已清空。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
+    # D03 保留：返回成功后，指派人必须真正清空。
+    assert_true_response(admin_maintenance_api.assign(order_id, None))
+    order = assert_response(tenant_maintenance_api.detail(order_id))["data"]
+    assert_order_identity(order, created_maintenance, status=0)
     assert order["assigneeId"] is None
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
 
 
 @pytest.mark.p1
@@ -265,76 +123,16 @@ def test_admin_cannot_reassign_processing_order(
 ):
     order_id = created_maintenance["id"]
     worker_id = created_worker["id"]
-
-    # 本用例独立准备派单，不能依赖上一条测试的工单或执行顺序。
-    response = admin_maintenance_api.assign(order_id, worker_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 派单只指定维修工，此时工单仍为待处理。
-    response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
-
-    # 指定维修工接取管理员派来的工单。
-    response = worker_maintenance_api.accept(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 查询详情，确认已进入处理中。
-    response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == worker_id
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
-
-    assert created_worker["id"] != created_second_worker["id"]
-    # 工单已由 A 处理，管理员尝试重新派给 B。
-    response = admin_maintenance_api.assign(
-        order_id, created_second_worker["id"],
+    _assign_and_check(admin_maintenance_api, tenant_maintenance_api, created_maintenance, worker_id)
+    _accept_and_check(worker_maintenance_api, created_maintenance, worker_id)
+    assert worker_id != created_second_worker["id"]
+    body = assert_response(
+        admin_maintenance_api.assign(order_id, created_second_worker["id"]), code=500,
     )
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
     assert body["message"] == "仅待处理工单可派单"
-
-    response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == worker_id
-    assert order["assigneeId"] == worker_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    order = assert_response(worker_maintenance_api.detail(order_id))["data"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, worker_id)
 
 @pytest.mark.p1
 @allure.title("维修工不能接取未指派的工单")
@@ -344,23 +142,7 @@ def test_worker_cannot_accept_unassigned_order(
 
 ):
     order_id = created_maintenance["id"]
-
-
-    response = worker_maintenance_api.accept(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(worker_maintenance_api.accept(order_id), code=500)
     assert body["message"] == "该工单未指派给你"
-    # 完工失败后，工单仍应保持待处理。
-    response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    order = assert_response(worker_maintenance_api.detail(order_id))["data"]
+    assert_order_identity(order, created_maintenance, status=0)

@@ -2,6 +2,8 @@
 created_room 依赖 created_apartment，清理时先删房间再删公寓。
 """
 
+from core.assertions import assert_response
+
 import pytest
 import allure
 
@@ -17,9 +19,7 @@ def test_new_apartment_has_no_rooms(admin_room_api,created_apartment):
         }
     )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     page = body['data']
 
     assert isinstance(page, dict)
@@ -34,9 +34,7 @@ def test_room_detail(admin_room_api, created_room):
     response = admin_room_api.detail(
         created_room['id'],
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     room = body['data']
     assert isinstance(room, dict)
     assert room['id'] == created_room['id']
@@ -57,9 +55,7 @@ def test_room_list_contains_created_room(admin_room_api, created_room):
             "apartmentId": created_room['apartmentId'],
         }
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     page = body['data']
     assert isinstance(page, dict)
     assert isinstance(page['records'], list)
@@ -91,9 +87,7 @@ def test_duplicate_room_number_rejected(admin_room_api, created_room):
     response = admin_room_api.create(
         payload=payload
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 400
+    body = assert_response(response, code=400)
     assert body['message'] == "同公寓下房间号已存在"
     # 除明确拒绝原因外，还要保证没有返回新建房间的数据。
     assert body.get("data") is None, "重复创建失败不应返回新房间数据"
@@ -105,10 +99,7 @@ def test_duplicate_room_number_rejected(admin_room_api, created_room):
         params={
             "apartmentId": created_room["apartmentId"],
         })
-    assert check.status_code == 200
-
-    check_body = check.json()
-    assert check_body["code"] == 200
+    check_body = assert_response(check)
 
     page = check_body["data"]
     # 此处公寓由本测试独立创建，且只创建一间房，因此总数 1 是可控预期。

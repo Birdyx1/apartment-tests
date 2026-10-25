@@ -1,3 +1,6 @@
+
+from core.assertions import assert_response, assert_true_response
+from helpers.maintenance import assert_order_identity, assert_worker_assignment
 import pytest
 import allure
 
@@ -11,10 +14,7 @@ def test_new_worker_has_no_mine_orders(worker_maintenance_api):
     response = worker_maintenance_api.list(
         params={"tab": "mine"}
     )
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body["data"]
     assert isinstance(orders, list)
@@ -32,9 +32,7 @@ def test_tenant_order_visible_in_worker_todo(
     response = worker_maintenance_api.list(
         params = {"tab": "todo"}
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body['data']
     assert isinstance(orders, list)
@@ -62,33 +60,19 @@ def test_worker_grab_order_success(
     order_id = created_maintenance["id"]
 
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 查询详情，确认状态和处理人实际更新。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
     # 抢单后，工单应进入当前维修工的本人列表。
     response = worker_maintenance_api.list(params={"tab": "mine"})
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body["data"]
     assert isinstance(orders, list)
@@ -104,9 +88,7 @@ def test_worker_grab_order_success(
     assert mine_order["handlerId"] == created_worker["id"]
     # 已被抢取的工单，不应继续出现在待接列表。
     response = worker_maintenance_api.list(params={"tab": "todo"})
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body["data"]
     assert isinstance(orders, list)
@@ -125,32 +107,20 @@ def test_worker_cannot_grab_order_twice(
     order_id = created_maintenance["id"]
     # 第一次抢单成功，让工单进入处理中。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 对同一工单再次发起抢单，应被拒绝。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅待处理工单可抢单"
 
     # 重复抢单失败后，原来的状态和归属应保持不变。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
 
 
@@ -164,34 +134,23 @@ def test_worker_cannot_complete_without_remark(
     order_id = created_maintenance["id"]
     # 先抢单，使工单进入处理中
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200,body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     payload = {
         "handlerRemark":"",
         "imageKeys":[]
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 400
+    body = assert_response(response, code=400)
     assert body["message"] == "请填写处理备注"
 
     # 完工被拒绝后，工单状态和归属应保持不变。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
 @pytest.mark.p1
 @allure.title("维修工未上传处理图片时不能完成工单")
@@ -203,33 +162,22 @@ def test_worker_cannot_complete_without_images(
     order_id = created_maintenance["id"]
     # 先抢单，使工单进入处理中
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     payload = {
         "handlerRemark": "已更换漏水管道，检查无渗漏",
         "imageKeys": [],
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "请至少上传一张处理图片"
     # 完工被拒绝后，工单状态和归属应保持不变。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
 
 @pytest.mark.p0
@@ -243,10 +191,7 @@ def test_worker_complete_order_success(
 ):
     order_id = created_maintenance["id"]
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 上传真实图片，取得完工请求所需图片Key。
     # fixture 已上传图片，并负责测试结束后的清理。
@@ -257,25 +202,14 @@ def test_worker_complete_order_success(
         "imageKeys":[object_key]
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200
-    assert body["data"] is True
+    body = assert_true_response(response)
     # 查询详情，确认工单真正完成，处理结果正确保存。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 2
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
-
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=2)
+    assert_worker_assignment(order, created_worker['id'])
 
     assert order["handlerRemark"] == payload["handlerRemark"]
     assert order["handleTime"], "完成工单后应记录处理时间"
@@ -284,9 +218,7 @@ def test_worker_complete_order_success(
     # 从申请租客的视角，验证同一工单的完工结果。
 
     response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     tenant_order = body["data"]
     assert tenant_order["id"] == order_id
@@ -301,9 +233,7 @@ def test_worker_complete_order_success(
     response = worker_maintenance_api.list(
         params={"tab": "mine", "status": 2},
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body['data']
     assert isinstance(orders,list)
@@ -337,10 +267,7 @@ def test_worker_cannot_complete_order_twice(
     """
     order_id = created_maintenance["id"]
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 上传真实图片，取得完工请求所需图片Key。
     # fixture 已上传图片，并负责测试结束后的清理。
@@ -351,25 +278,14 @@ def test_worker_cannot_complete_order_twice(
         "imageKeys":[object_key]
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200
-    assert body["data"] is True
+    body = assert_true_response(response)
     # 查询详情，确认工单真正完成，处理结果正确保存。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 2
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
-
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=2)
+    assert_worker_assignment(order, created_worker['id'])
 
     assert order["handlerRemark"] == payload["handlerRemark"]
     assert order["handleTime"], "完成工单后应记录处理时间"
@@ -381,18 +297,12 @@ def test_worker_cannot_complete_order_twice(
         "imageKeys": [object_key],
     }
     response = worker_maintenance_api.complete(order_id, retry_payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅处理中工单可完成"
 
     # 被拒绝后，重新查询并核对原数据。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     after_order = body["data"]
     for field in (
@@ -413,32 +323,20 @@ def test_worker_cannot_grab_cancelled_order(
     order_id = created_maintenance["id"]
     # 申请租客先取消工单。
     response = tenant_maintenance_api.cancel(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 维修工尝试抢取已取消的工单，应被拒绝。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅待处理工单可抢单"
     """
     抢单失败后，工单仍保持已取消
     """
 
     response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 3
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=3)
 
 """
 待处理工单不能跳过抢单，直接完工
@@ -458,23 +356,14 @@ def test_worker_cannot_complete_pending_order(
         "imageKeys": [uploaded_repair_image["objectKey"]],
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅处理中工单可完成"
     # 完工失败后，工单仍应保持待处理。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 0
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=0)
 
 
 
@@ -491,34 +380,21 @@ def test_worker_cannot_complete_cancelled_order(
 ):
     order_id = created_maintenance["id"]
     response = tenant_maintenance_api.cancel(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
     # 提供有效备注和图片，但不抢单，工单仍为待处理。
     payload = {
         "handlerRemark": "尝试完成已取消的工单",
         "imageKeys": [uploaded_repair_image["objectKey"]],
     }
     response = worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅处理中工单可完成"
     # 完工失败后，工单仍应保持待处理。
     response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 3
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=3)
 
 @pytest.mark.p0
 @allure.title("维修工不能完成其他维修工接取的工单")
@@ -535,11 +411,7 @@ def test_worker_cannot_complete_other_worker_order(
 
     # A 抢单，使工单进入处理中。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # B 尝试完成 A 的工单。
     payload = {
@@ -547,26 +419,16 @@ def test_worker_cannot_complete_other_worker_order(
         "imageKeys": [uploaded_repair_image["objectKey"]],
     }
     response = second_worker_maintenance_api.complete(order_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "只能完成自己接的工单"
 
     # B 完工失败后，通过 A 查询工单。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
 
 @pytest.mark.p0
@@ -583,18 +445,11 @@ def test_worker_cannot_view_other_worker_order(
 
     # A 抢单。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # B 尝试读取 A 的处理中工单。
     response = second_worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "无权查看该工单"
     assert body.get("data") is None, "拒绝访问时不应返回工单详情"
 
@@ -602,9 +457,7 @@ def test_worker_cannot_view_other_worker_order(
     response = second_worker_maintenance_api.list(
         params={"tab": "mine"},
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     orders = body['data']
     assert isinstance(orders, list)
@@ -631,34 +484,20 @@ def test_worker_cannot_grab_other_worker_order(
 
     # A 先抢单。
     response = worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # B 再抢同一张工单。
     response = second_worker_maintenance_api.grab(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "仅待处理工单可抢单"
 
     # B 抢单失败后，通过 A 查询工单归属。
     response = worker_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == created_worker["id"]
-    assert order["assigneeId"] == created_worker["id"]
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, created_worker['id'])
 
 
 @pytest.mark.p0
@@ -728,15 +567,8 @@ def test_only_one_worker_can_grab_order(
 
     # 通过申请租客查询最终工单，A 或 B 获胜都能查询。
     response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
-    assert order["id"] == order_id
-    assert order["status"] == 1
-    assert order["handlerId"] == winner_id
-    assert order["assigneeId"] == winner_id
-    assert order["tenantId"] == created_maintenance["tenantId"]
-    assert order["roomId"] == created_maintenance["roomId"]
+    assert_order_identity(order, created_maintenance, status=1)
+    assert_worker_assignment(order, winner_id)

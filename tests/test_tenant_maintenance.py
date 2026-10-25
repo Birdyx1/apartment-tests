@@ -1,3 +1,5 @@
+
+from core.assertions import assert_response, assert_true_response
 import pytest
 import allure
 
@@ -12,9 +14,7 @@ def test_tenant_create_maintenance(
         created_maintenance['id']
     )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     order = body["data"]
     assert order["id"] == created_maintenance["id"]
@@ -27,10 +27,7 @@ def test_tenant_create_maintenance(
 
     # 创建后，详情和列表中的工单均应处于待处理状态。
     list_response = tenant_maintenance_api.list()
-    assert list_response.status_code == 200
-
-    list_body = list_response.json()
-    assert list_body["code"] == 200, list_body.get("message")
+    list_body = assert_response(list_response)
     orders = list_body["data"]
     assert isinstance(orders, list)
 
@@ -56,28 +53,19 @@ def test_tenant_cancel_maintenance(
     response = tenant_maintenance_api.cancel(
         created_maintenance['id']
     )
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 再查询详情，确认取消操作真正更新了状态。
     response = tenant_maintenance_api.detail(
         created_maintenance['id']
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
     assert body['data']['id'] == created_maintenance["id"]
     assert body['data']['status'] == 3
 
     # 取消后任保留历史工单，历史中的状态也应该变
     list_response = tenant_maintenance_api.list()
-    assert list_response.status_code == 200
-
-    list_body = list_response.json()
-    assert list_body["code"] == 200, list_body.get("message")
+    list_body = assert_response(list_response)
 
     orders = list_body["data"]
     assert isinstance(orders, list)
@@ -102,19 +90,13 @@ def test_tenant_without_lease_cannot_create_maintenance(
         maintenance_payload,
 ):
     response = tenant_maintenance_api.create(maintenance_payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 400, body.get("message")
+    body = assert_response(response, code=400)
     assert body["message"] == "您当前没有在住记录，无法申请工单"
     assert body.get("data") is None
 
     # 请求被拒绝后，不应产生工单。
     list_response = tenant_maintenance_api.list()
-    assert list_response.status_code == 200
-
-    list_body = list_response.json()
-    assert list_body["code"] == 200, list_body.get("message")
+    list_body = assert_response(list_response)
     assert list_body["data"] == []
 
 @pytest.mark.p1
@@ -134,17 +116,12 @@ def test_tenant_create_maintenance_invalid_title(
     payload["title"] = title
 
     response = tenant_maintenance_api.create(payload)
-    assert response.status_code == 400
-
-    body = response.json()
-    assert body["code"] == 400, body.get("message")
+    body = assert_response(response, http_status=400, code=400)
     assert "工单标题不能为空" in body["message"]
     assert body.get("data") is None
 
     list_response = tenant_maintenance_api.list()
-    assert list_response.status_code == 200
-    list_body = list_response.json()
-    assert list_body["code"] == 200, list_body.get("message")
+    list_body = assert_response(list_response)
     assert list_body["data"] == []
 
 
@@ -159,18 +136,12 @@ def test_tenant_create_maintenance_missing_urgency(
     payload.pop("urgency")
 
     response = tenant_maintenance_api.create(payload)
-    assert response.status_code == 400
-
-    body = response.json()
-    assert body["code"] == 400, body.get("message")
+    body = assert_response(response, http_status=400, code=400)
     assert "紧急程度不能为空" in body["message"]
     assert body.get("data") is None
 
     list_response = tenant_maintenance_api.list()
-    assert list_response.status_code == 200
-
-    list_body = list_response.json()
-    assert list_body["code"] == 200, list_body.get("message")
+    list_body = assert_response(list_response)
     assert list_body["data"] == []
 
 
@@ -184,24 +155,17 @@ def test_tenant_cannot_cancel_maintenance_twice(
     order_id = created_maintenance["id"]
     # 第一次取消应成功。
     response = tenant_maintenance_api.cancel(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
+    body = assert_true_response(response)
 
     # 第二次取消同一工单，应明确拒绝。
     response = tenant_maintenance_api.cancel(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500, body.get("message")
+    body = assert_response(response, code=500)
     assert body["message"] == "只能取消待处理或处理中的工单"
     assert body.get("data") is None
 
     # 拒绝后，原工单应仍保持已取消状态。
     response = tenant_maintenance_api.detail(order_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
     assert body["data"]["id"] == order_id
     assert body["data"]["status"] == 3
     assert body["data"]["tenantId"] == created_maintenance["tenantId"]

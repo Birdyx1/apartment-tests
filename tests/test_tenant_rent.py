@@ -1,3 +1,9 @@
+
+from core.assertions import assert_response
+from helpers.rent import (
+    assert_bill_unchanged, assert_paid_bill, assert_paid_bill_list,
+    confirm_mock_payment, start_mock_payment,
+)
 import allure
 import pytest
 from decimal import Decimal
@@ -20,10 +26,7 @@ def test_tenant_can_view_lease_bill(
     :return:
     '''
     response = tenant_rent_api.list_bills()
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     bills = body["data"]
     assert isinstance(bills, list)
@@ -72,10 +75,7 @@ def test_tenant_can_view_lease_bill(
 
     # 使用列表返回的账单 ID 查询详情。
     response = tenant_rent_api.detail(bill["id"])
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     bill_detail = body["data"]
 
@@ -98,105 +98,14 @@ def test_tenant_mock_pay_bill_success(
         created_lease,
         tenant_rent_api,
         lease_payload,
+        tenant_lease_bill,
 ):
-    """
-
-    # 取得账单 → 发起模拟支付 → 确认支付 → 查询账单已缴
-    :param created_lease:
-    :param tenant_rent_api:
-    :param lease_payload:
-    :return:
-    """
-    response = tenant_rent_api.list_bills()
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    bills = body["data"]
-    assert isinstance(bills, list)
-
-    matched = [
-        bill for bill in bills
-        if bill["leaseId"] == created_lease["id"]
-    ]
-    assert len(matched) == 1, "应找到本次入住生成的账单"
-
-    bill = matched[0]
-    bill_id = bill["id"]
-
-    assert bill["tenantId"] == created_lease["tenantId"]
-    assert bill["roomId"] == created_lease["roomId"]
-    assert bill["status"] in (0, 2), "支付前账单应为待缴或逾期"
-
-    payload = {"channel": "ALIPAY"}
-    response = tenant_rent_api.pay(bill_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    payment = body['data']
-
-    assert payment['mode'] == 'MOCK'
-    assert payment["channel"] == payload["channel"]
-
-    # 取得后续模拟确认需要的支付单 ID。
-    payment_id = payment["paymentId"]
-    assert isinstance(payment_id, int)
-    assert payment_id > 0
-
-    # 使用支付单 ID 确认模拟支付。
-    response = tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 使用账单 ID 查询支付后的实际结果。
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    paid_bill = body["data"]
-    assert paid_bill["id"] == bill_id
-    assert paid_bill["leaseId"] == created_lease["id"]
-    assert paid_bill["tenantId"] == created_lease["tenantId"]
-    assert paid_bill["roomId"] == created_lease["roomId"]
-
-    assert paid_bill["status"] == 1
-    assert paid_bill["payChannel"] == payload["channel"]
-    assert paid_bill["paidTime"], "支付成功后应记录缴费时间"
-
-    assert isinstance(paid_bill["payTradeNo"], str)
-    assert paid_bill["payTradeNo"].startswith("MOCK_")
-
-    assert Decimal(str(paid_bill["amount"])) == Decimal(
-        str(lease_payload["monthlyRent"])
-    )
-
-
-    # 按已缴状态查询本人账单。
-    response = tenant_rent_api.list_bills(params={"status": 1})
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    paid_bills = body["data"]
-    assert isinstance(paid_bills, list)
-
-    matched = [
-        item for item in paid_bills
-        if item["id"] == bill_id
-    ]
-    assert len(matched) == 1, "已缴列表应唯一包含本次支付的账单"
-
-    for item in paid_bills:
-        assert item["status"] == 1, "已缴列表只能返回已缴账单"
-        assert item["tenantId"] == created_lease["tenantId"]
+    """支付过程留在成功用例中，重复前置和结果断言由公共函数承接。"""
+    bill = tenant_lease_bill
+    payment = start_mock_payment(tenant_rent_api, bill["id"])
+    confirm_mock_payment(tenant_rent_api, payment["paymentId"])
+    assert_paid_bill(tenant_rent_api, bill, lease_payload["monthlyRent"])
+    assert_paid_bill_list(tenant_rent_api, bill["id"], created_lease["tenantId"])
 
 
 
@@ -204,235 +113,28 @@ def test_tenant_mock_pay_bill_success(
 
 @pytest.mark.p1
 @allure.title("租客不能再次支付已缴账单")
-def test_tenant_cannot_pay_paid_bill(
-        created_lease,
-        tenant_rent_api,
-        lease_payload,
-):
-    """
-
-    # 取得账单 → 发起模拟支付 → 确认支付 → 查询账单已缴
-    :param created_lease:
-    :param tenant_rent_api:
-    :param lease_payload:
-    :return:
-    """
-    response = tenant_rent_api.list_bills()
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    bills = body["data"]
-    assert isinstance(bills, list)
-
-    matched = [
-        bill for bill in bills
-        if bill["leaseId"] == created_lease["id"]
-    ]
-    assert len(matched) == 1, "应找到本次入住生成的账单"
-
-    bill = matched[0]
-    bill_id = bill["id"]
-
-    assert bill["tenantId"] == created_lease["tenantId"]
-    assert bill["roomId"] == created_lease["roomId"]
-    assert bill["status"] in (0, 2), "支付前账单应为待缴或逾期"
-
-    payload = {"channel": "ALIPAY"}
-    response = tenant_rent_api.pay(bill_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    payment = body['data']
-
-    assert payment['mode'] == 'MOCK'
-    assert payment["channel"] == payload["channel"]
-
-    # 取得后续模拟确认需要的支付单 ID。
-    payment_id = payment["paymentId"]
-    assert isinstance(payment_id, int)
-    assert payment_id > 0
-
-    # 使用支付单 ID 确认模拟支付。
-    response = tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    # 使用账单 ID 查询支付后的实际结果。
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    paid_bill = body["data"]
-    assert paid_bill["id"] == bill_id
-    assert paid_bill["leaseId"] == created_lease["id"]
-    assert paid_bill["tenantId"] == created_lease["tenantId"]
-    assert paid_bill["roomId"] == created_lease["roomId"]
-
-    assert paid_bill["status"] == 1
-    assert paid_bill["payChannel"] == payload["channel"]
-    assert paid_bill["paidTime"], "支付成功后应记录缴费时间"
-
-    assert isinstance(paid_bill["payTradeNo"], str)
-    assert paid_bill["payTradeNo"].startswith("MOCK_")
-
-    assert Decimal(str(paid_bill["amount"])) == Decimal(
-        str(lease_payload["monthlyRent"])
+def test_tenant_cannot_pay_paid_bill(tenant_rent_api, paid_tenant_bill):
+    """已缴账单作为前置，本用例只关注再次支付及原结果保持。"""
+    bill = paid_tenant_bill["bill"]
+    body = assert_response(
+        tenant_rent_api.pay(bill["id"], {"channel": "ALIPAY"}), code=500,
     )
-
-
-    # 按已缴状态查询本人账单。
-    response = tenant_rent_api.list_bills(params={"status": 1})
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    paid_bills = body["data"]
-    assert isinstance(paid_bills, list)
-
-    matched = [
-        item for item in paid_bills
-        if item["id"] == bill_id
-    ]
-    assert len(matched) == 1, "已缴列表应唯一包含本次支付的账单"
-
-    for item in paid_bills:
-        assert item["status"] == 1, "已缴列表只能返回已缴账单"
-        assert item["tenantId"] == created_lease["tenantId"]
-
-    # 首次支付已成功，再次为同一账单发起支付。
-    response = tenant_rent_api.pay(bill_id, payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
     assert body["message"] == "账单已缴"
     assert body.get("data") is None, "拒绝重复支付时不应返回新支付单"
-    # 重复支付被拒绝后，再次查询账单。
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    after_bill = body["data"]
-
-    for field in (
-        "id", "leaseId", "tenantId", "roomId", "status",
-        "billMonth", "dueDate", "payChannel", "paidTime", "payTradeNo",
-    ):
-        assert after_bill[field] == paid_bill[field], (
-            f"重复支付被拒绝后，{field} 不应改变"
-        )
-
-    assert Decimal(str(after_bill["amount"])) == Decimal(
-        str(paid_bill["amount"])
-    )
+    assert_bill_unchanged(tenant_rent_api, bill)
 
 
 @pytest.mark.p1
 @allure.title("重复确认模拟支付不改变原支付结果")
-def test_tenant_mock_confirm_is_idempotent(
-        created_lease,
-        tenant_rent_api,
-        lease_payload,
-):
-    """完成首次模拟支付，再确认同一支付单，核对支付结果不被重写。"""
-    response = tenant_rent_api.list_bills()
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert isinstance(body["data"], list)
-    matched = [
-        bill for bill in body["data"]
-        if bill["leaseId"] == created_lease["id"]
-    ]
-    assert len(matched) == 1, "应找到本次入住的唯一账单"
-    bill = matched[0]
-    assert bill["tenantId"] == created_lease["tenantId"]
-    assert bill["roomId"] == created_lease["roomId"]
-    assert bill["status"] in (0, 2)
-    bill_id = bill["id"]
-
-    response = tenant_rent_api.pay(bill_id, {"channel": "ALIPAY"})
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    payment = body["data"]
-    assert payment["mode"] == "MOCK"
-    assert payment["channel"] == "ALIPAY"
-    payment_id = payment["paymentId"]
-    assert type(payment_id) is int and payment_id > 0
-
-    response = tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    before_bill = body["data"]
-    assert before_bill["id"] == bill_id
-    assert before_bill["leaseId"] == created_lease["id"]
-    assert before_bill["tenantId"] == created_lease["tenantId"]
-    assert before_bill["roomId"] == created_lease["roomId"]
-    assert before_bill["status"] == 1
-    assert before_bill["payChannel"] == "ALIPAY"
-    assert before_bill["paidTime"], "首次支付应记录缴费时间"
-    assert isinstance(before_bill["payTradeNo"], str)
-    assert before_bill["payTradeNo"].startswith("MOCK_")
-    assert Decimal(str(before_bill["amount"])) == Decimal(
-        str(lease_payload["monthlyRent"])
-    )
-
-    # 接口时间精度为秒；跨过一秒，才能捕捉重复确认重写缴费时间的问题。
+def test_tenant_mock_confirm_is_idempotent(tenant_rent_api, paid_tenant_bill):
+    """重复确认原支付单，不能重写秒级缴费时间、流水或金额。"""
+    bill = paid_tenant_bill["bill"]
+    payment = paid_tenant_bill["payment"]
     sleep(1.1)
-    response = tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    after_bill = body["data"]
-    for field in (
-        "id", "leaseId", "tenantId", "roomId", "status",
-        "billMonth", "dueDate", "payChannel", "paidTime", "payTradeNo",
-    ):
-        assert after_bill[field] == before_bill[field], (
-            f"重复确认后，{field} 不应改变"
-        )
-    assert Decimal(str(after_bill["amount"])) == Decimal(str(before_bill["amount"]))
+    confirm_mock_payment(tenant_rent_api, payment["paymentId"])
+    assert_bill_unchanged(tenant_rent_api, bill)
 
 
-def _assert_bill_unchanged(api, before_bill):
-    """失败请求后重新查询，核对账单和原支付结果没有被修改。"""
-    response = api.detail(before_bill["id"])
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    after_bill = body["data"]
-    for field in (
-        "id", "leaseId", "tenantId", "roomId", "status", "billMonth", "dueDate",
-    ):
-        assert after_bill[field] == before_bill[field], f"失败请求不应修改 {field}"
-    for field in ("paidTime", "payChannel", "payTradeNo"):
-        assert after_bill.get(field) == before_bill.get(field), f"失败请求不应修改 {field}"
-    assert Decimal(str(after_bill["amount"])) == Decimal(str(before_bill["amount"]))
 
 
 @pytest.mark.p1
@@ -452,16 +154,14 @@ def test_tenant_cannot_pay_with_invalid_channel(
         payload, http_status, business_code, message,
 ):
     response = tenant_rent_api.pay(tenant_lease_bill["id"], payload)
-    assert response.status_code == http_status
-    body = response.json()
-    assert body["code"] == business_code
+    body = assert_response(response, http_status=http_status, code=business_code)
     # 参数校验消息含字段名前缀；业务拒绝消息应精确匹配。
     if http_status == 400:
         assert message in body["message"]
     else:
         assert body["message"] == message
     assert body.get("data") is None, "拒绝时不应返回支付单"
-    _assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
+    assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
 
 
 @pytest.mark.p0
@@ -472,22 +172,18 @@ def test_tenant_cannot_view_other_tenant_bill(
 ):
     assert tenant_lease_bill["tenantId"] != created_second_tenant["id"]
     response = second_tenant_rent_api.detail(tenant_lease_bill["id"])
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "无权查看该账单"
     assert body.get("data") is None
 
     response = second_tenant_rent_api.list_bills()
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
     bills = body["data"]
     assert isinstance(bills, list)
     assert tenant_lease_bill["id"] not in [bill["id"] for bill in bills]
     for bill in bills:
         assert bill["tenantId"] == created_second_tenant["id"]
-    _assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
+    assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
 
 
 @pytest.mark.p0
@@ -500,12 +196,10 @@ def test_tenant_cannot_pay_other_tenant_bill(
     response = second_tenant_rent_api.pay(
         tenant_lease_bill["id"], {"channel": "ALIPAY"},
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "无权查看该账单"
     assert body.get("data") is None
-    _assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
+    assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
 
 
 @pytest.mark.p0
@@ -515,41 +209,14 @@ def test_tenant_cannot_confirm_other_tenant_payment(
         second_tenant_rent_api, created_second_tenant,
 ):
     assert tenant_lease_bill["tenantId"] != created_second_tenant["id"]
-    bill_id = tenant_lease_bill["id"]
-    # A 发起支付，暂不确认；B 必须使用这笔确实存在的支付单验证越权。
-    response = tenant_rent_api.pay(bill_id, {"channel": "ALIPAY"})
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"]["mode"] == "MOCK"
-    assert body["data"]["channel"] == "ALIPAY"
-    payment_id = body["data"]["paymentId"]
-    assert type(payment_id) is int and payment_id > 0
-
-    response = second_tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    # 先真实建立 A 的支付单，才能区分越权拒绝与“不存在”的拒绝。
+    payment = start_mock_payment(tenant_rent_api, tenant_lease_bill["id"])
+    body = assert_response(
+        second_tenant_rent_api.mock_confirm(payment["paymentId"]), code=500,
+    )
     assert body["message"] == "无权操作"
     assert body.get("data") is None
-    _assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
-
-    # B 的失败请求不应妨碍 A 随后正常确认支付。
-    response = tenant_rent_api.mock_confirm(payment_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    assert body["data"] is True
-    response = tenant_rent_api.detail(bill_id)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    paid_bill = body["data"]
-    for field in ("id", "leaseId", "tenantId", "roomId"):
-        assert paid_bill[field] == tenant_lease_bill[field]
-    assert paid_bill["status"] == 1
-    assert paid_bill["payChannel"] == "ALIPAY"
-    assert paid_bill["paidTime"]
-    assert isinstance(paid_bill["payTradeNo"], str)
-    assert paid_bill["payTradeNo"].startswith("MOCK_")
-    assert Decimal(str(paid_bill["amount"])) == Decimal(str(tenant_lease_bill["amount"]))
+    assert_bill_unchanged(tenant_rent_api, tenant_lease_bill)
+    # B 的失败请求不应妨碍 A 正常确认。
+    confirm_mock_payment(tenant_rent_api, payment["paymentId"])
+    assert_paid_bill(tenant_rent_api, tenant_lease_bill, tenant_lease_bill["amount"])

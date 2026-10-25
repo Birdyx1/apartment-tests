@@ -2,6 +2,8 @@
 房间状态 0=空置、2=在住；入住记录状态 0=在住、1=已退房，不能混用。
 """
 
+from core.assertions import assert_response
+
 import pytest
 import allure
 
@@ -14,11 +16,7 @@ def test_checkin_sets_room_occupied(admin_room_api,created_lease,admin_lease_api
     response = admin_room_api.detail(
         room_id=created_lease["roomId"],
     )
-    assert response.status_code == 200
-
-    body = response.json()
-
-    assert body['code'] == 200
+    body = assert_response(response)
     assert body['data']['id'] == created_lease['roomId']
     assert body['data']['status'] == 2
     # 从另一业务接口核对同一次入住：房间在住=2，租约在住=0。
@@ -30,9 +28,7 @@ def test_checkin_sets_room_occupied(admin_room_api,created_lease,admin_lease_api
             "size": 10,
         }
     )
-    assert lease_response.status_code == 200
-    lease_body = lease_response.json()
-    assert lease_body['code'] == 200
+    lease_body = assert_response(lease_response)
 
     records = lease_body['data']['records']
     assert isinstance(records, list)
@@ -59,10 +55,7 @@ def test_duplicate_checkin_rejected(
     声明 fixture 即触发准备，即使函数内没有直接读取其返回值。
     """
     response = admin_lease_api.create(lease_payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body['code'] == 500
+    body = assert_response(response, code=500)
     assert body['message'] == "该房间已有在住租客，请先办理退房"
     assert body.get('data', None) is None
 
@@ -75,10 +68,7 @@ def test_duplicate_checkin_rejected(
             "size": 10,
         }
     )
-    assert check.status_code == 200
-    check_body = check.json()
-
-    assert check_body['code'] == 200
+    check_body = assert_response(check)
 
     page = check_body['data']
     assert page["total"] == 1, "重复入住失败后不应新增入住记录"

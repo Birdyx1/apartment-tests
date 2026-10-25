@@ -3,6 +3,12 @@ Pytest 根据测试形参自动寻找同名 fixture，无需在测试中 import 
 所有 fixture 当前均使用默认 function 作用域；同一测试内同名依赖会复用，
 不同测试重新准备。测试函数中的断言验证业务，fixture 中的断言验证准备/清理。
 """
+
+from core.assertions import assert_response, assert_true_response
+from helpers.accounts import managed_account
+from helpers.rent import (
+    assert_paid_bill, assert_paid_bill_list, confirm_mock_payment, start_mock_payment,
+)
 import uuid
 
 from minio import Minio
@@ -29,6 +35,22 @@ from datetime import datetime
 from apis.tenant_room_api import TenantRoomApi
 from apis.worker_auth_api import WorkerAuthApi
 from apis.role_api import RoleApi
+
+
+
+def _login_worker(auth_api, client, worker):
+    """A/B 共用登录检查，但各自使用自己的客户端和账号。"""
+    body = assert_response(auth_api.login({
+        "username": worker["username"], "password": worker["password"],
+    }))
+    data = body["data"]
+    assert data["user"]["id"] == worker["id"]
+    assert data["user"]["username"] == worker["username"]
+    token = data["accessToken"]
+    assert isinstance(token, str) and token.strip(), "维修工令牌不能为空"
+    client.session.headers.update({"Authorization": f"Bearer {token}"})
+    return client
+
 
 @pytest.fixture
 def base_url():
@@ -63,13 +85,7 @@ def admin_client(api_client,auth_api,login_payload):
     """
     response = auth_api.login(login_payload)
 
-    assert response.status_code == 200
-
-    body = response.json()
-
-    assert body['code'] == 200,(
-        f"管理员登录准备失败：{body.get('message')}"
-    )
+    body = assert_response(response)
 
     token = body['data']['accessToken']
 
@@ -117,9 +133,7 @@ def created_apartment(admin_apartment_api):
     response = admin_apartment_api.create({
         "name": name
     })
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
 
     apartment_id = body['data']['id']
     assert isinstance(apartment_id, int)
@@ -164,9 +178,7 @@ def created_room(admin_room_api,created_apartment):
         "status": 0,
     }
     response = admin_room_api.create(payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     room_id = body['data']['id']
     assert isinstance(room_id, int)
     assert room_id > 0
@@ -207,12 +219,7 @@ def login_state(auth_api, login_payload):
         """用保存的正确凭据登录，成功后后端会清除此账号的失败次数。"""
         response = auth_api.login(correct_payload)
 
-        assert response.status_code == 200
-
-        body = response.json()
-        assert body["code"] == 200, (
-            f"恢复登录状态失败：{body.get('message')}"
-        )
+        body = assert_response(response)
 
     # 正确登录清除失败计数；如果账号已经锁定，这一步会明确报错而不会绕过锁定。
     restore()
@@ -257,25 +264,8 @@ def created_tenant(admin_tenant_api):
         "idCard": f"TEST{uuid4().hex[:14]}",
         "password":"Tenant123!"
     }
-    response = admin_tenant_api.create(payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
-    tenant_id = body['data']['id']
-    assert isinstance(tenant_id, int)
-    assert tenant_id > 0
-    try:
-        yield {
-            "id": tenant_id,
-            "name": payload['name'],
-            "gender": payload['gender'],
-            "phone": payload["phone"],
-            "password": payload["password"],
-        }
-    finally:
-        cleanup = admin_tenant_api.delete(tenant_id)
-        assert cleanup.status_code == 200
-        assert cleanup.json()['code'] == 200
+    with managed_account(admin_tenant_api, payload, ("name", "gender", "phone", "password")) as tenant:
+        yield tenant
 
 # 这里使用独立的 tenant_client，不要传 admin_client。
 @pytest.fixture
@@ -310,12 +300,7 @@ def created_lease(admin_lease_api,lease_payload,admin_room_api):
     """
     # 真实入住会将房间置为在住，并触发后端账单生成；不是纯查询操作。
     response = admin_lease_api.create(lease_payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body['code'] == 200,(
-        f"创建入住关系失败：{body.get('message')}"
-    )
+    body = assert_response(response)
 
     lease_id = body['data']['id']
     assert isinstance(lease_id, int)
@@ -388,9 +373,7 @@ def logged_in_tenant_client(
         "account": created_tenant["phone"],
         "password": created_tenant["password"],
     })
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     data = body['data']
     assert data['tenant']['id'] == created_tenant['id']
 
@@ -434,11 +417,7 @@ def created_maintenance(
 ):    # yield 前：依赖created_lease保证已入住，然后创建报修，取得工单ID。
     """创建报修工单；结束后取消未结束工单，保留已完成或已取消记录。"""
     response = tenant_maintenance_api.create(maintenance_payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200,(
-        f"创建报修工单失败：{body.get('message')}"
-    )
+    body = assert_response(response)
 
     order_id = body['data']['id']
     assert isinstance(order_id, int)
@@ -462,11 +441,7 @@ def created_maintenance(
         if status in (0, 1):
             # 尚未结束的工单，取消后再进行后续退房。
             response = tenant_maintenance_api.cancel(order_id)
-            assert response.status_code == 200
-
-            body = response.json()
-            assert body["code"] == 200, body.get("message")
-            assert body["data"] is True
+            body = assert_true_response(response)
             expected_status = 3
         else:
             # 已完成或已取消的工单，保留其终态。
@@ -508,10 +483,7 @@ def admin_role_api(admin_client):
 def worker_role_id(admin_role_api):
     """根据维修工角色编码，查询实际角色 ID。"""
     response = admin_role_api.enabled()
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     roles = body["data"]
     assert isinstance(roles, list)
@@ -550,33 +522,9 @@ def worker_payload(worker_role_id):
 
 @pytest.fixture
 def created_worker(admin_user_api,worker_payload):
-    """创建临时维修工账号，测试结束后删除"""
-    response = admin_user_api.create(worker_payload)
-    assert response.status_code == 200
-    body = response.json()
-
-    assert body['code'] == 200,(
-        f"创建维修工账号失败：{body.get('message')}"
-    )
-
-    user_id = body['data']['id']
-    assert isinstance(user_id, int)
-    assert user_id > 0
-
-    try:
-        yield {
-            "id": user_id,
-            "username": worker_payload['username'],
-            "password": worker_payload['password'],
-        }
-    finally:
-        cleanup = admin_user_api.delete(user_id)
-        assert cleanup.status_code == 200
-
-        body = cleanup.json()
-        assert body['code'] == 200,(
-            f"删除维修工账号失败：{body.get('message')}"
-        )
+    """创建维修工 A；with 退出时自动通过管理员接口删除。"""
+    with managed_account(admin_user_api, worker_payload, ("username", "password")) as worker:
+        yield worker
 
 
 @pytest.fixture
@@ -585,28 +533,8 @@ def logged_in_worker_client(
         worker_auth_api,
         created_worker,
 ):
-    """登录本次维修工账号，并设置后续请求的令牌。"""
-    response = worker_auth_api.login({
-        "username": created_worker["username"],
-        "password": created_worker["password"],
-    })
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    data = body["data"]
-    assert data["user"]["id"] == created_worker["id"]
-    assert data["user"]["username"] == created_worker["username"]
-
-    token = data["accessToken"]
-    assert isinstance(token, str)
-    assert token.strip(), "维修工登录准备失败：令牌为空"
-
-    worker_client.session.headers.update({
-        "Authorization": f"Bearer {token}",
-    })
-    return worker_client
+    """登录 A，并仅设置 A 的独立会话。"""
+    return _login_worker(worker_auth_api, worker_client, created_worker)
 
 @pytest.fixture
 def worker_maintenance_api(logged_in_worker_client):
@@ -651,10 +579,7 @@ def uploaded_repair_image(
     - finally：即使测试断言失败，也会尝试删除本次上传的图片；删除失败会报告后置错误。
     """
     response = worker_file_api.upload_image(repair_image_path)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     data = body["data"]
     object_key = data["objectKey"]
@@ -681,29 +606,9 @@ def second_worker_payload(worker_payload):
 
 @pytest.fixture
 def created_second_worker(admin_user_api, second_worker_payload):
-    """创建维修工 B，测试结束后删除该账号。"""
-    response = admin_user_api.create(second_worker_payload)
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    user_id = body["data"]["id"]
-    assert isinstance(user_id, int)
-    assert user_id > 0
-
-    try:
-        yield {
-            "id": user_id,
-            "username": second_worker_payload["username"],
-            "password": second_worker_payload["password"],
-        }
-    finally:
-        response = admin_user_api.delete(user_id)
-        assert response.status_code == 200
-
-        body = response.json()
-        assert body["code"] == 200, body.get("message")
+    """创建维修工 B，复用账号生命周期逻辑，数据仍与 A 独立。"""
+    with managed_account(admin_user_api, second_worker_payload, ("username", "password")) as worker:
+        yield worker
 
 @pytest.fixture
 def second_worker_client(base_url, request_timeout):
@@ -720,35 +625,10 @@ def logged_in_second_worker_client(
         second_worker_client,
         created_second_worker,
 ):
-    """
-    取得 B 的账号 → 使用 B 的客户端登录 → 核对身份 → 保存 B 的令牌。
-    :param second_worker_client:
-    :param created_second_worker:
-    :return:
-    """
-    """登录维修工 B，并为 B 的客户端设置令牌。"""
-    auth_api = WorkerAuthApi(second_worker_client)
-    response = auth_api.login({
-        "username": created_second_worker["username"],
-        "password": created_second_worker["password"],
-    })
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-
-    data = body["data"]
-    assert data["user"]["id"] == created_second_worker["id"]
-    assert data["user"]["username"] == created_second_worker["username"]
-
-    token = data["accessToken"]
-    assert isinstance(token, str)
-    assert token.strip(), "维修工 B 的令牌不能为空"
-
-    second_worker_client.session.headers.update({
-        "Authorization": f"Bearer {token}",
-    })
-    return second_worker_client
+    """登录 B，并仅设置 B 的独立会话。"""
+    return _login_worker(
+        WorkerAuthApi(second_worker_client), second_worker_client, created_second_worker,
+    )
 
 @pytest.fixture
 def second_worker_maintenance_api(logged_in_second_worker_client):
@@ -781,9 +661,7 @@ def tenant_rent_api(logged_in_tenant_client):
 def tenant_lease_bill(created_lease, tenant_rent_api):
     """取得本次入住的唯一账单；入住 fixture 负责后续退房。"""
     response = tenant_rent_api.list_bills()
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
     assert isinstance(body["data"], list)
     matched = [
         bill for bill in body["data"]
@@ -808,19 +686,8 @@ def created_second_tenant(admin_tenant_api):
         "idCard": f"TEST{uuid4().hex[:14]}",
         "password": "Tenant123!",
     }
-    response = admin_tenant_api.create(payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
-    tenant_id = body["data"]["id"]
-    assert type(tenant_id) is int and tenant_id > 0
-    try:
-        yield {"id": tenant_id, "phone": payload["phone"], "password": payload["password"]}
-    finally:
-        response = admin_tenant_api.delete(tenant_id)
-        assert response.status_code == 200
-        body = response.json()
-        assert body["code"] == 200, body.get("message")
+    with managed_account(admin_tenant_api, payload, ("phone", "password")) as tenant:
+        yield tenant
 
 
 @pytest.fixture
@@ -832,12 +699,20 @@ def second_tenant_rent_api(created_second_tenant, base_url, request_timeout):
             "account": created_second_tenant["phone"],
             "password": created_second_tenant["password"],
         })
-        assert response.status_code == 200
-        body = response.json()
-        assert body["code"] == 200, body.get("message")
+        body = assert_response(response)
         data = body["data"]
         assert data["tenant"]["id"] == created_second_tenant["id"]
         token = data["accessToken"]
         assert isinstance(token, str) and token.strip()
         session.headers.update({"Authorization": f"Bearer {token}"})
         yield TenantRentApi(client)
+
+
+@pytest.fixture
+def paid_tenant_bill(tenant_lease_bill, tenant_rent_api, lease_payload):
+    """为重复支付/确认场景准备已缴账单，复用原入住与资源清理。"""
+    payment = start_mock_payment(tenant_rent_api, tenant_lease_bill["id"])
+    confirm_mock_payment(tenant_rent_api, payment["paymentId"])
+    bill = assert_paid_bill(tenant_rent_api, tenant_lease_bill, lease_payload["monthlyRent"])
+    assert_paid_bill_list(tenant_rent_api, bill["id"], bill["tenantId"])
+    return {"bill": bill, "payment": payment}

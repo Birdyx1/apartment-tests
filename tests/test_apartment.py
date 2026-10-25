@@ -1,5 +1,7 @@
 """公寓查询测试：每个测试使用独立数据，结束后由 fixture 删除并检查不可见。"""
 
+from core.assertions import assert_response
+
 import pytest
 
 @pytest.mark.p1
@@ -8,9 +10,7 @@ def test_apartment_list(admin_apartment_api, created_apartment):
     response = admin_apartment_api.list()
     # 检查列表是否包含创建的公寓
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     assert isinstance(body['data'], list)
 
     # 整个列表可能有其他公寓，只按本次 ID 找目标，不假定全局总数。
@@ -34,10 +34,7 @@ def test_apartment_detail(admin_apartment_api, created_apartment):
     response = admin_apartment_api.detail(created_apartment["id"])
 
 
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 200
+    body = assert_response(response)
     assert body["data"]["id"] == created_apartment["id"]
     assert body["data"]["name"] == created_apartment["name"]
 
@@ -50,9 +47,7 @@ def test_apartment_list_filter_by_name(admin_apartment_api, created_apartment):
         params={"name": created_apartment["name"]}
     )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body['code'] == 200
+    body = assert_response(response)
     assert isinstance(body["data"], list)
     assert created_apartment["id"] in [
         item['id'] for item in body['data']

@@ -1,3 +1,5 @@
+
+from core.assertions import assert_response
 import pytest
 import allure
 
@@ -10,9 +12,7 @@ def test_worker_login_success(worker_auth_api, created_worker):
         "username": created_worker["username"],
         "password": created_worker["password"],
     })
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, body.get("message")
+    body = assert_response(response)
 
     data = body["data"]
     token = data["accessToken"]
@@ -27,9 +27,7 @@ def test_worker_login_success(worker_auth_api, created_worker):
     profile_response = worker_auth_api.profile(
         headers={"Authorization": f"Bearer {token}"}
     )
-    assert profile_response.status_code == 200
-    profile_body = profile_response.json()
-    assert profile_body["code"] == 200, profile_body.get("message")
+    profile_body = assert_response(profile_response)
 
     profile = profile_body["data"]
     assert profile["id"] == created_worker["id"]
@@ -41,10 +39,7 @@ def test_worker_login_success(worker_auth_api, created_worker):
 def test_worker_profile_without_token(worker_auth_api):
     """未携带令牌时不能查询维修工本人信息"""
     response = worker_auth_api.profile()
-    assert response.status_code == 401
-
-    body = response.json()
-    assert body["code"] == 401
+    body = assert_response(response, http_status=401, code=401)
     assert body["message"] == "请先登录"
     assert body.get("data") is None
 
@@ -55,10 +50,7 @@ def test_worker_profile_invalid_token_format(worker_auth_api):
     response = worker_auth_api.profile(
         headers={"Authorization": "Bearer invalid_token"}
     )
-    assert response.status_code == 401
-
-    body = response.json()
-    assert body["code"] == 401
+    body = assert_response(response, http_status=401, code=401)
     assert body["message"] == "无效的token格式"
     assert body.get("data") is None
 
@@ -69,9 +61,6 @@ def test_worker_login_wrong_password(worker_auth_api, created_worker):
         "username": created_worker["username"],
         "password": created_worker["password"] + "-wrong",
     })
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "用户名或密码错误"
     assert body.get("data") is None

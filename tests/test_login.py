@@ -2,6 +2,8 @@
 密码失败场景使用 YAML 参数化和 login_state 恢复失败计数。
 """
 
+from core.assertions import assert_response
+
 import pytest
 import allure
 from data_loader import load_login_cases
@@ -13,15 +15,7 @@ def test_admin_login(auth_api,login_payload):
     """正确登录后携带本轮令牌查询用户，确认不仅有令牌，而且能获取正确身份。"""
     response = auth_api.login(login_payload)
 
-    assert response.status_code == 200, (
-        f"预期 HTTP 200，实际为 {response.status_code}，响应：{response.text}"
-    )
-
-    body = response.json()
-
-    assert body['code'] == 200,(
-        f"登录失败：{body.get('message')}"
-    )
+    body = assert_response(response)
 
     token = body['data']['accessToken']
 
@@ -58,9 +52,7 @@ def test_admin_login_wrong_captcha(auth_api,login_payload):
     login_payload["captchaId"] = "nonexistent-captcha-for-learning"
     login_payload["captchaCode"] = "0000"
     response = auth_api.login(login_payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "验证码错误或已过期"
     # 拒绝结果不应携带用户/登录数据；get 兼容后端省略 data 字段。
     assert body.get("data") is None, "验证码校验失败不应返回登录数据"
@@ -80,10 +72,7 @@ def test_admin_login_invalid_password(auth_api, login_payload, case,login_state)
 
     response = auth_api.login(login_payload)
 
-    assert response.status_code == case["expected_http"]
-
-    body = response.json()
-    assert body["code"] == case["expected_code"]
+    body = assert_response(response, http_status=case["expected_http"], code=case["expected_code"])
     assert case["expected_message"] in body["message"]
     # 拒绝结果不应携带用户/登录数据；get 兼容后端省略 data 字段。
     assert body.get("data") is None
@@ -93,11 +82,7 @@ def test_admin_login_invalid_password(auth_api, login_payload, case,login_state)
 def test_current_user_without_token(auth_api):
     """普通 auth_api 没有自动登录，检查未提供令牌时不泄露用户数据。"""
     response = auth_api.current_user()
-    assert response.status_code == 200
-
-    body = response.json()
-
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "未提供访问token"
     # 拒绝结果不应携带用户/登录数据；get 兼容后端省略 data 字段。
     assert body.get("data") is None, "未登录不应返回用户数据"
@@ -111,9 +96,7 @@ def test_current_user_invalid_token(auth_api):
             "Authorization": "Bearer invalid-token"
         }
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500
+    body = assert_response(response, code=500)
     assert body["message"] == "访问token无效或已过期"
     # 拒绝结果不应携带用户/登录数据；get 兼容后端省略 data 字段。
     assert body.get("data") is None, "无效token不应返回用户数据"

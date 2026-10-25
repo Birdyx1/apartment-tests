@@ -1,3 +1,5 @@
+
+from core.assertions import assert_response
 import pytest
 import allure
 
@@ -11,11 +13,7 @@ def test_tenant_current_room(
     """查询当前房间，验证返回房间信息与预期一致。"""
     response = tenant_room_api.current_room()
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 200, (
-        f"查询本人房间失败：{body.get('message')}"
-    )
+    body = assert_response(response)
 
     room = body["data"]
     assert room["roomId"] == created_lease["roomId"]
@@ -28,10 +26,6 @@ def test_tenant_current_room(
 def test_tenant_without_lease_has_no_room(tenant_room_api):
     """未入住的租客查询房间，验证明确提示。"""
     response = tenant_room_api.current_room()
-    assert response.status_code == 200
-    body = response.json()
-    assert body["code"] == 500, (
-        f"查询未入住房间失败：{body.get('message')}"
-    )
+    body = assert_response(response, code=500)
     assert body['message'] == '当前没有在住记录'
     assert body.get('data') is None
