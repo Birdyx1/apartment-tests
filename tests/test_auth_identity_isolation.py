@@ -99,14 +99,20 @@ def same_id_identities(admin_tenant_api, admin_user_api, worker_role_id):
 @allure.title("相同数字 ID 的租客与维修工登录状态应互相独立")
 @pytest.mark.parametrize("first_kind", ["tenant", "worker"], ids=["tenant-first", "worker-first"])
 def test_same_id_cross_role_sessions_stay_valid(
-        same_id_identities, base_url, request_timeout, first_kind,
+        same_id_identities, base_url, request_timeout, api_evidence, first_kind,
 ):
     """先验证两个身份各自能登录，再检查后登录者是否错误撤销先登录者。"""
     assert same_id_identities["tenant"].id == same_id_identities["worker"].id
     with requests.Session() as tenant_session, requests.Session() as worker_session:
         apis = {
-            "tenant": TenantAuthApi(ApiClient(tenant_session, base_url, request_timeout)),
-            "worker": WorkerAuthApi(ApiClient(worker_session, base_url, request_timeout)),
+            "tenant": TenantAuthApi(ApiClient(
+                tenant_session, base_url, request_timeout,
+                evidence_records=api_evidence,
+            )),
+            "worker": WorkerAuthApi(ApiClient(
+                worker_session, base_url, request_timeout,
+                evidence_records=api_evidence,
+            )),
         }
 
         def login(kind):

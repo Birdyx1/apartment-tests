@@ -9,8 +9,8 @@ from helpers.accounts import managed_account
 from helpers.rent import (
     assert_paid_bill, assert_paid_bill_list, confirm_mock_payment, start_mock_payment,
 )
-import uuid
-
+import json
+import allure
 from minio import Minio
 import pytest
 import requests
@@ -24,7 +24,6 @@ from apis.tenant_rent_api import TenantRentApi
 from apis.user_api import UserApi
 from apis.worker_file_api import WorkerFileApi
 from apis.worker_maintenance_api import WorkerMaintenanceApi
-from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
 from apis.auth_api import AuthApi
 from uuid import uuid4
@@ -36,7 +35,17 @@ from apis.tenant_room_api import TenantRoomApi
 from apis.worker_auth_api import WorkerAuthApi
 from apis.role_api import RoleApi
 
-
+from config import (
+    BASE_URL,
+    REQUEST_TIMEOUT,
+    ADMIN_USERNAME,
+    ADMIN_PASSWORD,
+    MINIO_ENDPOINT,
+    MINIO_ACCESS_KEY,
+    MINIO_SECRET_KEY,
+    MINIO_BUCKET,
+    MINIO_SECURE,
+)
 
 def _login_worker(auth_api, client, worker):
     """A/B 共用登录检查，但各自使用自己的客户端和账号。"""
@@ -104,14 +113,19 @@ def admin_client(api_client,auth_api,login_payload):
 
     return api_client
 
+@pytest.fixture
+def api_evidence():
+    """每条测试创建一个容器，供该测试内的所有 ApiClient 共享。"""
+    return []
 
 @pytest.fixture
-def api_client(api_session,base_url,request_timeout):
+def api_client(api_session, base_url, request_timeout, api_evidence):
     """为普通 Session 加上基础地址和超时；本 fixture 本身不登录。"""
     return ApiClient(
         session=api_session,
         base_url=base_url,
         timeout=request_timeout,
+        evidence_records=api_evidence,
     )
 
 @pytest.fixture
@@ -239,7 +253,7 @@ def admin_tenant_api(admin_client):
 # admin_tenant_api	管理员创建、查询、删除租客资料
 # tenant_client	租客登录及后续租客操作
 @pytest.fixture
-def tenant_client(base_url,request_timeout):
+def tenant_client(base_url, request_timeout, api_evidence):
     """创建另一套独立 Session，避免与管理员客户端共用 Authorization。
     此时尚未登录；with/yield 负责会话使用后的关闭。
     """
@@ -247,7 +261,8 @@ def tenant_client(base_url,request_timeout):
         yield ApiClient(
             session=session,
             base_url=base_url,
-            timeout=request_timeout
+            timeout=request_timeout,
+            evidence_records=api_evidence,
         )
 
 
@@ -458,13 +473,14 @@ def created_maintenance(
 
 
 @pytest.fixture
-def worker_client(base_url,request_timeout):
+def worker_client(base_url, request_timeout, api_evidence):
     """保存独立的会话、请求头，结束后关闭会话。"""
     with requests.Session() as session:
         yield ApiClient(
             session = session,
             base_url = base_url,
             timeout = request_timeout,
+            evidence_records = api_evidence,
         )
 
 
@@ -557,12 +573,12 @@ def repair_image_path():
 
 @pytest.fixture
 def minio_client():
-    """提供本地 MinIO 客户端，用于清理测试上传的图片。"""
+    """提供 MinIO 客户端，用于清理测试上传的图片。"""
     return Minio(
-        "localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False,
+        MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+        secure=MINIO_SECURE,
     )
 
 @pytest.fixture
@@ -590,8 +606,7 @@ def uploaded_repair_image(
     try:
         yield data
     finally:
-        minio_client.remove_object("apartment", object_key)
-
+        minio_client.remove_object(MINIO_BUCKET, object_key)
 @pytest.fixture
 def second_worker_payload(worker_payload):
     """准备维修工 B 的独立账号数据。"""
@@ -611,13 +626,14 @@ def created_second_worker(admin_user_api, second_worker_payload):
         yield worker
 
 @pytest.fixture
-def second_worker_client(base_url, request_timeout):
+def second_worker_client(base_url, request_timeout, api_evidence):
     """提供维修工 B 的独立会话，结束后关闭。"""
     with requests.Session() as session:
         yield ApiClient(
             session=session,
             base_url=base_url,
             timeout=request_timeout,
+            evidence_records=api_evidence,
         )
 
 @pytest.fixture
@@ -691,10 +707,15 @@ def created_second_tenant(admin_tenant_api):
 
 
 @pytest.fixture
-def second_tenant_rent_api(created_second_tenant, base_url, request_timeout):
+def second_tenant_rent_api(
+        created_second_tenant, base_url, request_timeout, api_evidence
+):
     """使用 B 的独立会话登录，避免覆盖租客 A 的令牌。"""
     with requests.Session() as session:
-        client = ApiClient(session, base_url, request_timeout)
+        client = ApiClient(
+            session, base_url, request_timeout,
+            evidence_records=api_evidence,
+        )
         response = TenantAuthApi(client).login({
             "account": created_second_tenant["phone"],
             "password": created_second_tenant["password"],
@@ -716,3 +737,22 @@ def paid_tenant_bill(tenant_lease_bill, tenant_rent_api, lease_payload):
     bill = assert_paid_bill(tenant_rent_api, tenant_lease_bill, lease_payload["monthlyRent"])
     assert_paid_bill_list(tenant_rent_api, bill["id"], bill["tenantId"])
     return {"bill": bill, "payment": payment}
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+
+    # setup、测试执行或 teardown 任一阶段失败时，都尝试附加证据。
+    if not report.failed:
+        return
+
+    records = getattr(item, "funcargs", {}).get("api_evidence", [])
+    if not records:
+        return
+
+    allure.attach(
+        json.dumps(records, ensure_ascii=False, indent=2, default=str),
+        name=f"接口请求证据-{report.when}",
+        attachment_type=allure.attachment_type.JSON,
+    )

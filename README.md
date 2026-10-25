@@ -30,11 +30,35 @@ python -m pytest --collect-only -q
 
 ## 配置与限制
 
-config.py 提供基础地址、默认超时和管理员演示账号；可通过 APARTMENT_BASE_URL、APARTMENT_ADMIN_USERNAME、APARTMENT_ADMIN_PASSWORD 覆盖。默认环境是本地服务，不使用真实环境账号。
+`config.py` 集中管理 API 地址、管理员演示账号和 MinIO 连接参数。API 地址与管理员账号可通过 `APARTMENT_BASE_URL`、`APARTMENT_ADMIN_USERNAME`、`APARTMENT_ADMIN_PASSWORD` 覆盖；MinIO 使用以下环境变量，未设置时采用本地练习默认值：
+
+| 环境变量 | 默认值 | 用途 |
+|---|---|---|
+| `APARTMENT_MINIO_ENDPOINT` | `localhost:9000` | MinIO 服务地址 |
+| `APARTMENT_MINIO_ACCESS_KEY` | `minioadmin` | MinIO 访问账号 |
+| `APARTMENT_MINIO_SECRET_KEY` | `minioadmin` | MinIO 访问密钥 |
+| `APARTMENT_MINIO_BUCKET` | `apartment` | 测试图片所在桶 |
+| `APARTMENT_MINIO_SECURE` | `false` | 是否通过 HTTPS 连接 |
+
+`APARTMENT_MINIO_SECURE` 会去除首尾空格并忽略大小写；只有字符串 `true` 会转换为布尔值 `True`，其他值转换为 `False`。
+
+连接其他测试环境时，可在启动命令前设置变量。请将示例地址和占位凭据替换为该环境提供的值：
+
+```bash
+APARTMENT_BASE_URL="http://test-api.example:8080" \
+APARTMENT_MINIO_ENDPOINT="test-minio.example:9000" \
+APARTMENT_MINIO_ACCESS_KEY="your-access-key" \
+APARTMENT_MINIO_SECRET_KEY="your-secret-key" \
+APARTMENT_MINIO_BUCKET="apartment-test" \
+APARTMENT_MINIO_SECURE="true" \
+python -m pytest -v
+```
+
+此写法只对当前测试进程生效。不要把真实环境凭据写进 README 或提交到代码仓库。默认环境是本地服务，不使用真实环境账号。
 
 当前仅按串行执行设计。错误密码用例的 login_state fixture 在前后正确登录，恢复失败计数；已锁定账号无法通过正确登录直接解锁，需要先等锁定到期或单独恢复本地账号状态。同账号重新登录会使旧令牌失效，不并行运行，也避免与该账号的手动操作同时进行。并发抢单用例仅在单条测试内使用两个独立维修工会话发送请求，10 个参数轮次按顺序执行；不表示整个测试套件支持并行。
 
-公寓、房间和租客数据按测试创建并清理，房间先于所属公寓清理；入住 fixture 先退房并检查状态，再结束相关资源 fixture。报修 fixture 先检查工单状态：待处理/处理中则取消至状态 3，已完成 2 或已取消 3 则保留终态；复查终态后退房和清理基础资料。取消和完工保留工单与操作日志，退房保留入住和账单历史。图片成功用例由 uploaded_repair_image 在结束后删除本次上传对象；已完成测试工单的图片关联历史保留，对应测试图片已删除。本地 MinIO 客户端使用 localhost:9000、apartment 桶及本地演示凭据，依赖 minio SDK。清理断言失败会报告 ERROR。验证码 2998 是项目内置演示绕过值，不代表真实图片验证码流程已覆盖。
+公寓、房间和租客数据按测试创建并清理，房间先于所属公寓清理；入住 fixture 先退房并检查状态，再结束相关资源 fixture。报修 fixture 先检查工单状态：待处理/处理中则取消至状态 3，已完成 2 或已取消 3 则保留终态；复查终态后退房和清理基础资料。取消和完工保留工单与操作日志，退房保留入住和账单历史。图片成功用例由 uploaded_repair_image 在结束后删除本次上传对象；已完成测试工单的图片关联历史保留，对应测试图片已删除。MinIO 客户端使用 `config.py` 中的环境配置，依赖 minio SDK。清理断言失败会报告 ERROR。验证码 2998 是项目内置演示绕过值，不代表真实图片验证码流程已覆盖。
 
 维修工使用独立 Session；管理员按启用角色编码 MAINTENANCE_WORKER 查询 ID，创建具有唯一用户名、邮箱和模拟手机号的临时系统用户，测试结束后通过用户删除接口清理。邮箱/手机号缺失触发唯一约束的后端缺陷仍待修复，当前正常场景使用完整测试数据。删除权限编码已统一为 system:user:remove，已验证管理员可删除、维修工无权删除。
 

@@ -16,3 +16,12 @@ REQUEST_TIMEOUT = 10
 # 仅为本地练习提供默认账号；更换环境时可用环境变量覆盖。
 ADMIN_USERNAME = os.getenv("APARTMENT_ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("APARTMENT_ADMIN_PASSWORD", "123456")
+
+
+MINIO_ENDPOINT = os.getenv("APARTMENT_MINIO_ENDPOINT", "localhost:9000")
+MINIO_ACCESS_KEY = os.getenv("APARTMENT_MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("APARTMENT_MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET = os.getenv("APARTMENT_MINIO_BUCKET", "apartment")
+
+# 环境变量读出来是字符串；不能直接用 bool("false")，因为它会得到 True。
+MINIO_SECURE = os.getenv("APARTMENT_MINIO_SECURE", "false").strip().lower() == "true"

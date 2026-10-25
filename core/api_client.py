@@ -3,16 +3,22 @@
 """
 
 import logging
+import time
 from urllib.parse import urlsplit
+
+from core.evidence import sanitize
 
 logger = logging.getLogger(__name__)
 class ApiClient:
     """通用请求客户端，保存 Session、服务地址和默认超时。"""
-    def __init__(self, session,base_url,timeout):
-        """保存调用方提供的客户端/配置；初始化本身不发送 HTTP 请求。"""
+
+    def __init__(self, session, base_url, timeout, evidence_records=None):
         self.session = session
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.evidence_records = (
+            evidence_records if evidence_records is not None else []
+        )
 
     def request(self,method,path,**kwargs):
         """发送一个相对路径请求，并将 json、params、headers 等参数原样转交 Session。
@@ -32,11 +38,41 @@ class ApiClient:
 
         # **kwargs 可包含 json（请求体）、params（查询条件）、headers（本次请求头）。
         # 日志只记录方法/路径/状态，不输出密码、令牌或完整请求响应。
+        started_at = time.perf_counter()
         response = self.session.request(
             method=method,
             url=url,
             **kwargs
         )
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
+        logger.info(
+            f"HTTP 状态码：{response.status_code}，耗时：{elapsed_ms:.2f} ms"
+        )
 
-        logger.info(f"HTTP 状态码：{response.status_code}")
+        try:
+            response_body = response.json()
+        except ValueError:
+            response_body = None
+
+        if isinstance(response_body, (dict, list)):
+            safe_response_body = sanitize(response_body)
+        else:
+            safe_response_body = "[非 JSON 对象响应已省略]"
+
+        params = kwargs.get("params")
+        json_body = kwargs.get("json")
+        record = {
+            "method": method.upper(),
+            "path": path,
+            "params": sanitize(params) if isinstance(params, (dict, list)) else None,
+            "request_json": (
+                sanitize(json_body)
+                if isinstance(json_body, (dict, list)) else None
+            ),
+            "status_code": response.status_code,
+            "response_json": safe_response_body,
+            "elapsed_ms": round(elapsed_ms, 2),
+        }
+        self.evidence_records.append(record)
+
         return response
