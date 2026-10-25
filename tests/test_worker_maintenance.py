@@ -642,3 +642,18 @@ def test_worker_cannot_grab_other_worker_order(
     body = response.json()
     assert body["code"] == 500
     assert body["message"] == "仅待处理工单可抢单"
+
+    # B 抢单失败后，通过 A 查询工单归属。
+    response = worker_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 1
+    assert order["handlerId"] == created_worker["id"]
+    assert order["assigneeId"] == created_worker["id"]
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
