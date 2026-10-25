@@ -38,3 +38,9 @@ class WorkerMaintenanceApi:
             f"/worker-app/maintenance/{order_id}/complete",
             json=payload,
         )
+    def accept(self, order_id):
+        """接取管理员指派给当前维修工的工单。"""
+        return self.client.request(
+            "PUT",
+            f"/worker-app/maintenance/{order_id}/accept",
+        )
