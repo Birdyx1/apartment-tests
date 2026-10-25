@@ -24,6 +24,10 @@ pipeline {
 
     post {
         always {
+            allure(
+                allureVersion: 'allure3',
+                results: [[path: 'allure-results']]
+            )
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
         }
     }
