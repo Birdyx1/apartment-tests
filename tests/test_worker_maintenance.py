@@ -613,3 +613,32 @@ def test_worker_cannot_view_other_worker_order(
         assert item["handlerId"] == created_second_worker["id"], (
             "本人列表只能返回当前维修工接取的工单"
         )
+
+
+@pytest.mark.p0
+@allure.title("维修工不能抢取其他维修工已接的工单")
+def test_worker_cannot_grab_other_worker_order(
+        created_maintenance,
+        worker_maintenance_api,
+        second_worker_maintenance_api,
+        created_worker,
+        created_second_worker,
+):
+    order_id = created_maintenance["id"]
+    assert created_worker["id"] != created_second_worker["id"]
+
+    # A 先抢单。
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # B 再抢同一张工单。
+    response = second_worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 500
+    assert body["message"] == "仅待处理工单可抢单"
