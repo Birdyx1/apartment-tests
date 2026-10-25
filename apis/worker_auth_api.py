@@ -10,3 +10,10 @@ class WorkerAuthApi:
             "/worker-app/auth/login",
             json=payload
         )
+
+    def profile(self,**kwargs):
+        return self.client.request(
+            "GET",
+            "/worker-app/profile",
+            **kwargs,
+        )

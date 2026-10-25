@@ -11,6 +11,7 @@ import requests
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from apis.tenant_maintenance_api import TenantMaintenanceApi
+from apis.user_api import UserApi
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
 from apis.auth_api import AuthApi
@@ -514,3 +515,53 @@ def worker_role_id(admin_role_api):
     role_id = role["id"]
     assert type(role_id) is int and role_id > 0
     return role_id
+
+@pytest.fixture
+def admin_user_api(admin_client):
+    """提供管理员身份的用户维护接口对象。"""
+    return UserApi(admin_client)
+
+
+@pytest.fixture
+def worker_payload(worker_role_id):
+    """提供每次测试独立的维修工账号数据。"""
+    suffix = uuid4().hex[:8]
+    return {
+        "username": f"auto_worker_{suffix}",
+        "password": "Worker123!",
+        "email": f"auto_worker_{suffix}@example.com",
+        "phone": f"199{uuid4().int % 100000000:08d}",
+        "status": 1,
+        "roleIds": [worker_role_id],
+    }
+
+@pytest.fixture
+def created_worker(admin_user_api,worker_payload):
+    """创建临时维修工账号，测试结束后删除"""
+    response = admin_user_api.create(worker_payload)
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body['code'] == 200,(
+        f"创建维修工账号失败：{body.get('message')}"
+    )
+
+    user_id = body['data']['id']
+    assert isinstance(user_id, int)
+    assert user_id > 0
+
+    try:
+        yield {
+            "id": user_id,
+            "username": worker_payload['username'],
+            "password": worker_payload['password'],
+        }
+    finally:
+        cleanup = admin_user_api.delete(user_id)
+        assert cleanup.status_code == 200
+
+        body = cleanup.json()
+        assert body['code'] == 200,(
+            f"删除维修工账号失败：{body.get('message')}"
+        )
+
