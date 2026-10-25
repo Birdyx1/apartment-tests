@@ -5,6 +5,7 @@ Pytest 根据测试形参自动寻找同名 fixture，无需在测试中 import 
 """
 import uuid
 
+from minio import Minio
 import pytest
 import requests
 from pathlib import Path
@@ -621,3 +622,44 @@ def repair_image_path():
     path = Path(__file__).resolve().parent / "data" / "repair.png"
     assert path.is_file(), f"测试图片不存在：{path}"
     return path
+
+
+@pytest.fixture
+def minio_client():
+    """提供本地 MinIO 客户端，用于清理测试上传的图片。"""
+    return Minio(
+        "localhost:9000",
+        access_key="minioadmin",
+        secret_key="minioadmin",
+        secure=False,
+    )
+
+@pytest.fixture
+def uploaded_repair_image(
+        worker_file_api,
+        repair_image_path,
+        minio_client,
+):
+    """上传测试图片，并在测试结束后删除本次上传的对象。"""
+    """
+    它分三部分：
+    - yield 前：上传图片，检查上传成功。
+    - yield data：把 objectKey、url 提供给测试使用。
+    - finally：即使测试断言失败，也会尝试删除本次上传的图片；删除失败会报告后置错误。
+    """
+    response = worker_file_api.upload_image(repair_image_path)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    data = body["data"]
+    object_key = data["objectKey"]
+    assert isinstance(object_key, str)
+    assert object_key.startswith("maintenance/")
+    assert object_key.endswith(".png")
+
+    try:
+        yield data
+    finally:
+        minio_client.remove_object("apartment", object_key)
