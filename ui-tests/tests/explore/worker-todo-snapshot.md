@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e34]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - heading "待抢工单" [level=1] [ref=e38]
+        - paragraph [ref=e39]: 全平台可抢维修任务
+      - generic [ref=e40]:
+        - generic: 下拉刷新
+        - generic [ref=e42]: 暂无可抢工单
+    - generic [ref=e54]:
+      - generic [ref=e55] [cursor=pointer]: 抢单
+      - generic [ref=e64] [cursor=pointer]: 我的工单
+      - generic [ref=e73] [cursor=pointer]: 我的
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 登录成功
