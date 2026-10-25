@@ -125,3 +125,75 @@ def test_other_worker_cannot_accept_assigned_order(
     body = response.json()
     assert body["code"] == 500
     assert body["message"] == "该工单未指派给你"
+
+    # B 接单失败后，查询工单是否保持原状态和指派人。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] == created_worker["id"]
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+
+
+@pytest.mark.p1
+@allure.title("指定维修工不能抢取已派单工单")
+def test_assigned_worker_cannot_grab_order(
+        created_maintenance,
+        created_worker,
+        admin_maintenance_api,
+        tenant_maintenance_api,
+        worker_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    worker_id = created_worker["id"]
+
+    # 管理员把工单指派给本次创建的维修工。
+    response = admin_maintenance_api.assign(order_id, worker_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+    assert body["data"] is True
+
+    # 申请租客查询详情，核对派单结果。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+    response = worker_maintenance_api.grab(order_id)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["code"] == 500, body.get("message")
+    assert body['message'] == '该工单已指派，无法抢单'
+
+    # 抢单失败后，工单仍保持待处理及原指派人。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 0
+    assert order["assigneeId"] == worker_id
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
