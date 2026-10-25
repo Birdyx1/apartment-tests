@@ -7,11 +7,12 @@ import uuid
 
 import pytest
 import requests
-
+from pathlib import Path
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from apis.tenant_maintenance_api import TenantMaintenanceApi
 from apis.user_api import UserApi
+from apis.worker_file_api import WorkerFileApi
 from apis.worker_maintenance_api import WorkerMaintenanceApi
 from config import BASE_URL,REQUEST_TIMEOUT,ADMIN_USERNAME,ADMIN_PASSWORD
 from core.api_client import ApiClient
@@ -427,7 +428,7 @@ def created_maintenance(
         tenant_maintenance_api,
         created_lease,
 ):    # yield 前：依赖created_lease保证已入住，然后创建报修，取得工单ID。
-    """创建报修工单，并在测试结束后恢复为已取消状态。"""
+    """创建报修工单；结束后取消未结束工单，保留已完成或已取消记录。"""
     response = tenant_maintenance_api.create(maintenance_payload)
     assert response.status_code == 200
     body = response.json()
@@ -452,21 +453,28 @@ def created_maintenance(
         assert detail_body["code"] == 200, (
             f"查询报修工单详情失败：{detail_body.get('message')}"
         )
-        status = detail_body['data']['status']
+        status = detail_body["data"]["status"]
+
         if status in (0, 1):
+            # 尚未结束的工单，取消后再进行后续退房。
             response = tenant_maintenance_api.cancel(order_id)
             assert response.status_code == 200
+
             body = response.json()
             assert body["code"] == 200, body.get("message")
             assert body["data"] is True
+            expected_status = 3
         else:
-            assert status == 3, f"无法按预期清理工单，当前状态：{status}"
-        # 核对取消后的实际状态。
+            # 已完成或已取消的工单，保留其终态。
+            assert status in (2, 3), f"工单状态异常：{status}"
+            expected_status = status
+
         response = tenant_maintenance_api.detail(order_id)
         assert response.status_code == 200
+
         body = response.json()
         assert body["code"] == 200, body.get("message")
-        assert body["data"]["status"] == 3
+        assert body["data"]["status"] == expected_status
 
 
 
@@ -600,3 +608,16 @@ def logged_in_worker_client(
 def worker_maintenance_api(logged_in_worker_client):
     """提供已登录维修工身份的工单接口对象。"""
     return WorkerMaintenanceApi(logged_in_worker_client)
+
+
+@pytest.fixture
+def worker_file_api(logged_in_worker_client):
+    """提供已登录维修工身份的图片上传接口对象。"""
+    return WorkerFileApi(logged_in_worker_client)
+
+@pytest.fixture
+def repair_image_path():
+    """提供处理图片的本地路径，此处不上传文件。"""
+    path = Path(__file__).resolve().parent / "data" / "repair.png"
+    assert path.is_file(), f"测试图片不存在：{path}"
+    return path
