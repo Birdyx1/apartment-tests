@@ -1,6 +1,8 @@
 import pytest
 import allure
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 @pytest.mark.p1
 @allure.title("新维修工的本人已接工单列表为空")
@@ -655,5 +657,86 @@ def test_worker_cannot_grab_other_worker_order(
     assert order["status"] == 1
     assert order["handlerId"] == created_worker["id"]
     assert order["assigneeId"] == created_worker["id"]
+    assert order["tenantId"] == created_maintenance["tenantId"]
+    assert order["roomId"] == created_maintenance["roomId"]
+
+
+@pytest.mark.p0
+@allure.title("两个维修工同时抢单只能一人成功")
+@pytest.mark.parametrize("round_no", range(1, 11))
+def test_only_one_worker_can_grab_order(
+        round_no,
+        created_maintenance,
+        worker_maintenance_api,
+        second_worker_maintenance_api,
+        created_worker,
+        created_second_worker,
+        tenant_maintenance_api,
+):
+    order_id = created_maintenance["id"]
+    assert created_worker["id"] != created_second_worker["id"]
+
+    barrier = Barrier(2)
+
+    def grab_together(api):
+        # 两个线程都准备好后，再分别发送抢单请求。
+        barrier.wait(timeout=10)
+        return api.grab(order_id)
+
+    workers = [
+        (created_worker["id"], worker_maintenance_api),
+        (created_second_worker["id"], second_worker_maintenance_api),
+    ]
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [
+            (worker_id, pool.submit(grab_together, api))
+            for worker_id, api in workers
+        ]
+        results = [
+            (worker_id, future.result(timeout=20))
+            for worker_id, future in futures
+        ]
+    success_ids = []
+    failed_bodies = []
+
+    for worker_id, response in results:
+        assert response.status_code == 200
+
+        body = response.json()
+
+        if body["code"] == 200:
+            assert body["data"] is True
+            success_ids.append(worker_id)
+        else:
+            assert body["code"] == 500
+            assert body["message"] in (
+                "仅待处理工单可抢单",
+                "抢单失败，工单可能已被抢走",
+            )
+            failed_bodies.append(body)
+
+    assert len(success_ids) == 1, (
+        f"第 {round_no} 轮：应恰好一人抢单成功"
+    )
+    assert len(failed_bodies) == 1, (
+        f"第 {round_no} 轮：应恰好一人抢单失败"
+    )
+
+    # 前面已确认只有一人成功，取出赢家的账号 ID。
+    winner_id = success_ids[0]
+
+    # 通过申请租客查询最终工单，A 或 B 获胜都能查询。
+    response = tenant_maintenance_api.detail(order_id)
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["code"] == 200, body.get("message")
+
+    order = body["data"]
+    assert order["id"] == order_id
+    assert order["status"] == 1
+    assert order["handlerId"] == winner_id
+    assert order["assigneeId"] == winner_id
     assert order["tenantId"] == created_maintenance["tenantId"]
     assert order["roomId"] == created_maintenance["roomId"]

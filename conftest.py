@@ -9,6 +9,8 @@ from minio import Minio
 import pytest
 import requests
 from pathlib import Path
+
+from apis.admin_maintenance_api import AdminMaintenanceApi
 from apis.room_api import RoomApi
 from apis.tenant_api import TenantAPI
 from apis.tenant_maintenance_api import TenantMaintenanceApi
@@ -751,3 +753,16 @@ def logged_in_second_worker_client(
 def second_worker_maintenance_api(logged_in_second_worker_client):
     """提供已登录维修工 B 身份的工单接口对象。"""
     return WorkerMaintenanceApi(logged_in_second_worker_client)
+
+
+@pytest.fixture
+def admin_maintenance_api(admin_client):
+    """提供已登录管理员身份的工单接口对象。
+        admin_client：提供管理员会话和令牌
+      ↓
+        AdminMaintenanceApi：封装派单接口
+      ↓
+        admin_maintenance_api：供测试调用
+    """
+    return AdminMaintenanceApi(admin_client)
+
