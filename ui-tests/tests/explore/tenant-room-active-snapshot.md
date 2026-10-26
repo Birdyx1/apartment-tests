@@ -1,0 +1,42 @@
+- generic [ref=e34]:
+  - generic [ref=e120]:
+    - generic [ref=e121]:
+      - heading "我的房间" [level=1] [ref=e122]
+      - paragraph [ref=e123]: UI房间公寓-e6df4099 · UI房间-e6df4099
+    - generic [ref=e124]:
+      - generic [ref=e125]: 房间信息
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - generic [ref=e129]: 楼层
+          - generic [ref=e130]: 5层
+        - generic [ref=e131]:
+          - generic [ref=e132]: 户型
+          - generic [ref=e133]: 两室一厅
+        - generic [ref=e134]:
+          - generic [ref=e135]: 面积
+          - generic [ref=e136]: 48㎡
+        - generic [ref=e137]:
+          - generic [ref=e138]: 地址
+          - generic [ref=e139]: 房间测试地址-e6df4099
+        - generic [ref=e140]:
+          - generic [ref=e141]: 联系人
+          - generic [ref=e142]: 联系人-e6df4099
+        - generic [ref=e143]:
+          - generic [ref=e144]: 电话
+          - generic [ref=e145]: 020-76543210
+    - generic [ref=e146]:
+      - generic [ref=e147]: 租约信息
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - generic [ref=e151]: 入住时间
+          - generic [ref=e152]: 2026-10-26
+        - generic [ref=e153]:
+          - generic [ref=e154]: 押金
+          - generic [ref=e155]: ¥1000
+        - generic [ref=e156]:
+          - generic [ref=e157]: 月租
+          - generic [ref=e158]: ¥2200
+  - generic [ref=e83]:
+    - generic [ref=e84] [cursor=pointer]: 首页
+    - generic [ref=e93] [cursor=pointer]: 工单
+    - generic [ref=e102] [cursor=pointer]: 我的

@@ -1,0 +1,15 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e38]:
+      - heading "你好，UI首页租客-74324205" [level=1] [ref=f1e39]
+      - paragraph [ref=f1e40]: 欢迎使用公寓租客服务
+    - generic [ref=f1e41]:
+      - generic [ref=f1e42] [cursor=pointer]: 申请维修
+      - generic [ref=f1e51] [cursor=pointer]: 我的工单
+      - generic [ref=f1e61] [cursor=pointer]:
+        - generic [ref=f1e68]: 房租账单
+        - generic [ref=f1e69]: "1"
+  - generic [ref=f1e10]:
+    - generic [ref=f1e11] [cursor=pointer]: 首页
+    - generic [ref=f1e20] [cursor=pointer]: 工单
+    - generic [ref=f1e29] [cursor=pointer]: 我的

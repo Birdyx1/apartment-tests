@@ -1,0 +1,19 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - heading "维修工端" [level=1] [ref=e6]
+    - paragraph [ref=e7]: 使用管理员为您开通的账号登录
+  - generic [ref=e8]:
+    - generic [ref=e11]:
+      - generic [ref=e14]:
+        - generic [ref=e16]:
+          - text: 用户名
+          - generic [ref=e17]: "*"
+        - textbox "用户名 *" [ref=e21]:
+          - /placeholder: 请输入用户名
+      - generic [ref=e24]:
+        - generic [ref=e26]:
+          - text: 密码
+          - generic [ref=e27]: "*"
+        - textbox "密码 *" [ref=e31]:
+          - /placeholder: 请输入密码
+    - button "登录" [ref=e33] [cursor=pointer]

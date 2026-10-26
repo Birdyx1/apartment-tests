@@ -1,0 +1,20 @@
+- generic [ref=e34]:
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - heading "你好，UI房间租客-e6df4099" [level=1] [ref=e38]
+      - paragraph [ref=e39]: 欢迎使用公寓租客服务
+    - generic [ref=e40]:
+      - generic [ref=e41]: 当前房间
+      - generic [ref=e45] [cursor=pointer]:
+        - generic [ref=e46]: UI房间公寓-e6df4099 UI房间-e6df4099
+        - generic [ref=e47]: 两室一厅 · 48㎡ · 5层
+    - generic [ref=e53]:
+      - generic [ref=e54] [cursor=pointer]: 申请维修
+      - generic [ref=e63] [cursor=pointer]: 我的工单
+      - generic [ref=e73] [cursor=pointer]:
+        - generic [ref=e80]: 房租账单
+        - generic [ref=e81]: "1"
+  - generic [ref=e83]:
+    - generic [ref=e84] [cursor=pointer]: 首页
+    - generic [ref=e93] [cursor=pointer]: 工单
+    - generic [ref=e102] [cursor=pointer]: 我的

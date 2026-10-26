@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { request, test as base } from '@playwright/test';
 import { getAuthStatePath } from '../auth-state';
 
-type WorkerAccount = { id: number; username: string; password: string };
+type WorkerAccount = { id: number; username: string; password: string; phone: string };
 
 /** 构造本地管理员 API 上下文；令牌只从被忽略的浏览器登录态文件读取，不输出。 */
 export async function createAdminApi() {
@@ -37,12 +37,13 @@ export const test = base.extend<{ workerAccount: WorkerAccount }>({
       const suffix = randomUUID().replaceAll('-', '').slice(0, 10);
       const username = `auto_ui_worker_${suffix}`;
       const password = 'Worker123!';
+      const phone = `199${Date.now().toString().slice(-8)}`;
       const created = await api.post('/system/user', {
         data: {
           username,
           password,
           email: `${username}@example.com`,
-          phone: `199${Date.now().toString().slice(-8)}`,
+          phone,
           status: 1,
           roleIds: [workerRole.id],
         },
@@ -53,7 +54,7 @@ export const test = base.extend<{ workerAccount: WorkerAccount }>({
       }
       const createdWorkerId = createdBody.data.id as number;
       workerId = createdWorkerId;
-      await use({ id: createdWorkerId, username, password });
+      await use({ id: createdWorkerId, username, password, phone });
     } finally {
       if (workerId !== undefined) {
         const deleted = await api.delete(`/system/user/${workerId}`);
