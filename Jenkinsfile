@@ -98,6 +98,7 @@ pipeline {
                                 export PW_LOCALHOST_TARGET="$localhost_target"
                                 cd ui-tests
                                 export CI=true
+                                API_BASE_URL=http://host.docker.internal:8080 \
                                 BASE_URL=http://host.docker.internal:3000 \
                                 PW_STORAGE_STATE=tests/.auth/jenkins-admin.json \
                                 npx playwright test
