@@ -7,6 +7,7 @@ import pymysql
 import uvicorn
 from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 
 load_dotenv()
 
@@ -164,9 +165,27 @@ if __name__ == "__main__":
     if not token:
         raise RuntimeError("MCP_API_TOKEN must be set in .env")
 
+    public_hosts = [
+        host.strip()
+        for host in os.getenv("MCP_ALLOWED_HOSTS", "").split(",")
+        if host.strip()
+    ]
+
     app = server.streamable_http_app(
         json_response=True,
         stateless_http=True,
+        transport_security=TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            # The MCP SDK auto-allows loopback Host values when bound locally.
+            # Supplying explicit settings replaces those defaults, so retain
+            # loopback access and allow the current public tunnel hostname.
+            allowed_hosts=[
+                "127.0.0.1:*",
+                "localhost:*",
+                "[::1]:*",
+                *[value for host in public_hosts for value in (host, f"{host}:*")],
+            ],
+        ),
         host=host,
     )
     app.add_middleware(BearerTokenMiddleware, token=token)
