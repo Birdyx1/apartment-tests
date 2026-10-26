@@ -1,0 +1,19 @@
+- generic [ref=f1e4]:
+  - generic [ref=f1e5]:
+    - heading "租客登录" [level=1] [ref=f1e6]
+    - paragraph [ref=f1e7]: 请输入账号和密码
+  - generic [ref=f1e8]:
+    - generic [ref=f1e11]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e16]:
+          - text: 账号
+          - generic [ref=f1e17]: "*"
+        - textbox "账号 *" [ref=f1e21]:
+          - /placeholder: 请输入手机号或身份证号
+      - generic [ref=f1e24]:
+        - generic [ref=f1e26]:
+          - text: 密码
+          - generic [ref=f1e27]: "*"
+        - textbox "密码 *" [ref=f1e31]:
+          - /placeholder: 请输入密码
+    - button "登录" [ref=f1e33] [cursor=pointer]

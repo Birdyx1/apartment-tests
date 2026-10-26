@@ -1,0 +1,18 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - generic [ref=f2e85]:
+      - generic [ref=f2e86]:
+        - heading "房租账单" [level=1] [ref=f2e87]
+        - paragraph [ref=f2e88]: 查看并缴纳每月房租
+      - generic [ref=f2e91] [cursor=pointer]:
+        - generic [ref=f2e92]:
+          - generic [ref=f2e93]: 2026-10 房租 · ¥1800
+          - generic [ref=f2e94]: 应缴 2026-10-01 · UI首页公寓-d3599471 UI首页-d3599471
+        - generic [ref=f2e95]: 已缴
+    - generic [ref=f2e33]:
+      - generic [ref=f2e34] [cursor=pointer]: 首页
+      - generic [ref=f2e43] [cursor=pointer]: 工单
+      - generic [ref=f2e52] [cursor=pointer]: 我的
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 支付成功

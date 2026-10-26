@@ -1,0 +1,36 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - button [ref=f2e7]:
+          - generic [ref=f2e8] [cursor=pointer]
+        - generic [ref=f2e15]: 账单详情
+      - generic [ref=f2e17]:
+        - generic [ref=f2e18]:
+          - generic [ref=f2e19]: 2026-10 房租
+          - paragraph [ref=f2e20]: ¥1800
+        - generic [ref=f2e21]: 逾期
+        - generic [ref=f2e22]:
+          - generic [ref=f2e23]: 应缴日期
+          - generic [ref=f2e24]: 2026-10-01
+        - generic [ref=f2e25]:
+          - generic [ref=f2e26]: 房间
+          - generic [ref=f2e27]: UI首页公寓-d3599471 UI首页-d3599471
+      - generic [ref=f2e28]:
+        - button "支付宝支付" [ref=f2e29] [cursor=pointer]
+        - button "微信支付" [active] [ref=f2e31] [cursor=pointer]
+    - generic [ref=f2e33]:
+      - generic [ref=f2e34] [cursor=pointer]: 首页
+      - generic [ref=f2e43] [cursor=pointer]: 工单
+      - generic [ref=f2e52] [cursor=pointer]: 我的
+  - generic:
+    - generic:
+      - generic [aria-hidden] [ref=f2e61]:
+        - button
+      - dialog [ref=f2e62]:
+        - generic [ref=f2e64]:
+          - generic [ref=f2e65]: 模拟支付
+          - generic [ref=f2e66]: 确认支付 ¥1800 吗？
+          - generic [ref=f2e70]:
+            - button "取消" [ref=f2e71] [cursor=pointer]
+            - button "确定" [ref=f2e72] [cursor=pointer]

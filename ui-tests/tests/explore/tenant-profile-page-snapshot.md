@@ -1,0 +1,31 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: U
+        - generic [ref=e10]: UI首页租客-c52e40b4
+      - generic [ref=e11]:
+        - generic [ref=e12]: 个人信息
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]: 姓名
+            - generic [ref=e17]: UI首页租客-c52e40b4
+          - generic [ref=e18]:
+            - generic [ref=e19]: 性别
+            - generic [ref=e20]: 男
+          - generic [ref=e21]:
+            - generic [ref=e22]: 手机号
+            - generic [ref=e23]: "19976011221"
+          - generic [ref=e24]:
+            - generic [ref=e25]: 身份证
+            - generic [ref=e26]: TESTef********fb47
+      - generic [ref=e31]:
+        - generic [ref=e32] [cursor=pointer]: 编辑个人信息
+        - generic [ref=e41] [cursor=pointer]: 退出登录
+    - generic [ref=e51]:
+      - generic [ref=e52] [cursor=pointer]: 首页
+      - generic [ref=e61] [cursor=pointer]: 工单
+      - generic [ref=e70] [cursor=pointer]: 我的
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 当前没有在住记录
