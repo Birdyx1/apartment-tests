@@ -41,7 +41,8 @@ export default async function globalSetup() {
     await page.getByRole('textbox', { name: '密码' }).fill(password);
     await page.getByRole('textbox', { name: '验证码' }).fill(captcha);
     await page.getByRole('button', { name: /登录/ }).click();
-    await page.waitForURL((url) => url.pathname.includes('/apartment/list'), { timeout: 15_000 });
+    // 管理端实际登录后的首页是 dashboard；公寓列表是登录后的业务页。
+    await page.waitForURL((url) => url.pathname === '/dashboard', { timeout: 15_000 });
 
     await fs.mkdir(path.dirname(authFile), { recursive: true });
     await context.storageState({ path: authFile });
