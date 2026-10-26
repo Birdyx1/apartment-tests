@@ -1,0 +1,24 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e45]:
+    - generic [ref=f1e46]:
+      - button [ref=f1e47]:
+        - generic [ref=f1e48] [cursor=pointer]
+      - generic [ref=f1e55]: 账单详情
+    - generic [ref=f1e57]:
+      - generic [ref=f1e58]:
+        - generic [ref=f1e59]: 2026-10 房租
+        - paragraph [ref=f1e60]: ¥1800
+      - generic [ref=f1e61]: 逾期
+      - generic [ref=f1e62]:
+        - generic [ref=f1e63]: 应缴日期
+        - generic [ref=f1e64]: 2026-10-01
+      - generic [ref=f1e65]:
+        - generic [ref=f1e66]: 房间
+        - generic [ref=f1e67]: UI首页公寓-0e7913b0 UI首页-0e7913b0
+    - generic [ref=f1e68]:
+      - button "支付宝支付" [ref=f1e69] [cursor=pointer]
+      - button "微信支付" [ref=f1e71] [cursor=pointer]
+  - generic [ref=f1e17]:
+    - generic [ref=f1e18] [cursor=pointer]: 首页
+    - generic [ref=f1e27] [cursor=pointer]: 工单
+    - generic [ref=f1e36] [cursor=pointer]: 我的

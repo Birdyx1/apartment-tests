@@ -1,0 +1,14 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - heading "房租账单" [level=1] [ref=f1e7]
+      - paragraph [ref=f1e8]: 查看并缴纳每月房租
+    - generic [ref=f1e11] [cursor=pointer]:
+      - generic [ref=f1e12]:
+        - generic [ref=f1e13]: 2026-10 房租 · ¥1800
+        - generic [ref=f1e14]: 应缴 2026-10-01 ·
+      - generic [ref=f1e15]: 逾期
+  - generic [ref=f1e17]:
+    - generic [ref=f1e18] [cursor=pointer]: 首页
+    - generic [ref=f1e27] [cursor=pointer]: 工单
+    - generic [ref=f1e36] [cursor=pointer]: 我的
