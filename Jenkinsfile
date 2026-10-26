@@ -69,7 +69,7 @@ pipeline {
             }
         }
 
-        stage('运行管理端 UI 回归') {
+        stage('运行全量 UI 回归') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -86,6 +86,7 @@ pipeline {
                                 export PATH="$JENKINS_HOME/.cache/node-24/bin:$PATH"
                                 export PLAYWRIGHT_BROWSERS_PATH="$JENKINS_HOME/.cache/ms-playwright"
                                 cd ui-tests
+                                export CI=true
                                 BASE_URL=http://host.docker.internal:3000 \
                                 PW_STORAGE_STATE=tests/.auth/jenkins-admin.json \
                                 npx playwright test

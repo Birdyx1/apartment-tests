@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - button [ref=e7]:
+          - generic [ref=e8] [cursor=pointer]
+        - generic [ref=e15]: 公告详情
+      - generic [ref=e17]:
+        - heading "UI自动化公告-57d56174" [level=1] [ref=e18]
+        - generic [ref=e19]: 2026-10-26 09:07:05
+        - generic [ref=e20]: 公告详情正文-57d56174 第二行：用于校验换行内容完整展示。
+    - generic [ref=e22]:
+      - generic [ref=e23] [cursor=pointer]: 首页
+      - generic [ref=e32] [cursor=pointer]: 工单
+      - generic [ref=e41] [cursor=pointer]: 我的
+  - generic:
+    - generic [aria-hidden]:
+      - generic: 登录成功

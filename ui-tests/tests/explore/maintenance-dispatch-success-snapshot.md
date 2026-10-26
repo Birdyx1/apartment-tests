@@ -1,0 +1,120 @@
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - complementary [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - img "dashboard" [ref=e12]
+          - strong [ref=e17]: 智能公寓系统
+        - menu [ref=e18]:
+          - menuitem "dashboard 工作台" [ref=e19] [cursor=pointer]:
+            - img "dashboard" [ref=e20]
+            - generic [ref=e23]: 工作台
+          - menuitem "setting 系统管理" [ref=e24] [cursor=pointer]:
+            - img "setting" [ref=e25]
+            - generic [ref=e28]: 系统管理
+          - menuitem "monitor 系统监控" [ref=e29] [cursor=pointer]:
+            - img "monitor" [ref=e30]
+            - generic [ref=e33]: 系统监控
+          - menuitem "home 公寓管理" [ref=e34] [cursor=pointer]:
+            - img "home" [ref=e35]
+            - generic [ref=e38]: 公寓管理
+    - generic [ref=e39]:
+      - banner [ref=e40]:
+        - button [ref=e42] [cursor=pointer]:
+          - img "menu-fold" [ref=e44]
+        - img "user" [ref=e49] [cursor=pointer]
+      - main [ref=e52]:
+        - generic [ref=e54]:
+          - generic [ref=e57]:
+            - generic [ref=e59]:
+              - generic "房间" [ref=e61]: "房间 :"
+              - generic [ref=e67]:
+                - combobox "房间 :" [ref=e69]
+                - generic: 搜索房间
+            - generic [ref=e71]:
+              - generic "租客" [ref=e73]: "租客 :"
+              - generic [ref=e79]:
+                - combobox "租客 :" [ref=e81]
+                - generic: 搜索租客
+            - generic [ref=e83]:
+              - generic "状态" [ref=e85]: "状态 :"
+              - combobox "状态 :" [ref=e93] [cursor=pointer]
+            - generic [ref=e95]:
+              - generic "紧急程度" [ref=e97]: "紧急程度 :"
+              - combobox "紧急程度 :" [ref=e105] [cursor=pointer]
+            - generic [ref=e111]:
+              - button "search 搜索" [ref=e113] [cursor=pointer]:
+                - img "search" [ref=e115]
+                - generic [ref=e118]: 搜索
+              - button "重 置" [ref=e120] [cursor=pointer]
+          - generic [ref=e123]:
+            - button "reload 刷新" [ref=e125] [cursor=pointer]:
+              - img "reload" [ref=e290]
+              - generic [ref=e130]: 刷新
+            - generic [ref=e134]:
+              - generic [ref=e136]:
+                - table [ref=e138]:
+                  - rowgroup [ref=e150]:
+                    - row [ref=e151]:
+                      - columnheader "房间" [ref=e152]
+                      - columnheader "租客" [ref=e153]
+                      - columnheader "标题" [ref=e154]
+                      - columnheader "描述" [ref=e155]
+                      - columnheader "紧急程度" [ref=e156]
+                      - columnheader "状态" [ref=e157]
+                      - columnheader "指派" [ref=e158]
+                      - columnheader "处理备注" [ref=e159]
+                      - columnheader "申请时间" [ref=e160]
+                      - columnheader "操作" [ref=e161]
+                - table [ref=e163]:
+                  - rowgroup [ref=e175]:
+                    - row [ref=e293]:
+                      - cell "UI详情公寓-8ee3f98f · UI详情-8ee3f98f" [ref=e177]
+                      - cell "UI详情租客-8ee3f98f" [ref=e178]
+                      - cell "UI详情工单-8ee3f98f" [ref=e179]
+                      - cell "自动化测试专用描述：检查工单详情展示" [ref=e180]
+                      - cell "紧急" [ref=e181]
+                      - cell "待处理" [ref=e183]
+                      - cell "auto_ui_worker_80d35890b4" [ref=e294]
+                      - cell [ref=e186]
+                      - cell "2026-10-26 09:26:34" [ref=e187]
+                      - cell [ref=e188]:
+                        - generic [ref=e189]:
+                          - button "派单" [active] [ref=e191] [cursor=pointer]
+                          - button "接单" [ref=e194] [cursor=pointer]
+                          - button "取消" [ref=e197] [cursor=pointer]
+                    - row [ref=e199]:
+                      - cell "自动化公寓2fbef137 · 自动化房间-61121d9a" [ref=e200]
+                      - cell "自动化租客-52689f3e" [ref=e201]
+                      - cell "自动化报修-6aa9d186" [ref=e202]
+                      - cell "卫生间水管漏水" [ref=e203]
+                      - cell "普通" [ref=e204]
+                      - cell "已取消" [ref=e206]
+                      - cell "未派" [ref=e208]
+                      - cell [ref=e209]
+                      - cell "2026-10-25 20:12:22" [ref=e210]
+                      - cell [ref=e211]:
+                        - button "详情" [ref=e214] [cursor=pointer]
+                    - row [ref=e216]:
+                      - cell "自动化公寓4d532037 · 自动化房间-01583dc0" [ref=e217]
+                      - cell "自动化租客-4ad998b3" [ref=e218]
+                      - cell "自动化报修-7beb3c5f" [ref=e219]
+                      - cell "卫生间水管漏水" [ref=e220]
+                      - cell "普通" [ref=e221]
+                      - cell "已取消" [ref=e223]
+                      - cell "未派" [ref=e225]
+                      - cell [ref=e226]
+                      - cell "2026-10-25 20:12:19" [ref=e227]
+                      - cell [ref=e228]:
+                        - button "详情" [ref=e231] [cursor=pointer]
+              - list [ref=e233]:
+                - listitem "上一页" [ref=e234]:
+                  - button [disabled] [ref=e235]:
+                    - img "left" [ref=e236]
+                - listitem "1" [ref=e239] [cursor=pointer]
+                - listitem "下一页" [ref=e241]:
+                  - button [disabled] [ref=e242]:
+                    - img "right" [ref=e243]
+  - generic [ref=e296]:
+    - img "check-circle" [ref=e297]
+    - generic [ref=e300]: 派单成功

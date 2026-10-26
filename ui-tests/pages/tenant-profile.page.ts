@@ -24,6 +24,21 @@ export class TenantProfilePage {
     await expect(this.page).toHaveURL(`${this.baseUrl}/login`);
   }
 
+  async openEdit() {
+    await this.page.getByText('编辑个人信息', { exact: true }).click();
+    await expect(this.page.getByText('编辑个人信息', { exact: true })).toBeVisible();
+  }
+
+  async fillEditForm(profile: { name: string; phone: string; gender: '男' | '女' | '未知' }) {
+    await this.page.getByRole('textbox', { name: /姓名/ }).fill(profile.name);
+    await this.page.getByRole('textbox', { name: /手机号/ }).fill(profile.phone);
+    await this.page.getByRole('option', { name: profile.gender, exact: true }).click();
+  }
+
+  async saveEdit() {
+    await this.page.getByRole('button', { name: '保存' }).click();
+  }
+
   infoRow(label: string): Locator {
     return this.page.locator('.kv-row').filter({
       has: this.page.locator('.kv-label', { hasText: label }),

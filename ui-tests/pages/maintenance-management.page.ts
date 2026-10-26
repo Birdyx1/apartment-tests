@@ -52,6 +52,27 @@ export class MaintenanceManagementPage {
     return this.page.locator('.ant-table-tbody > tr.ant-table-row');
   }
 
+  orderRow(title: string): Locator {
+    return this.page.locator('.ant-table-tbody > tr.ant-table-row').filter({ hasText: title });
+  }
+
+  assignDialog(): Locator {
+    return this.page.getByRole('dialog', { name: '派单' });
+  }
+
+  async assignOrder(title: string, workerUsername: string) {
+    const row = this.orderRow(title);
+    await row.getByRole('button', { name: '派单' }).click();
+    const dialog = this.assignDialog();
+    await dialog.getByRole('combobox', { name: '维修工' }).click();
+    // Ant Design 的候选项渲染在 dialog 以外的 portal；限定可见弹层并核验选中值。
+    const workerOption = this.page.locator('.ant-select-dropdown:visible .ant-select-item-option')
+      .filter({ hasText: workerUsername });
+    await workerOption.click();
+    await expect(dialog.locator('.ant-select-selection-item')).toContainText(workerUsername);
+    await dialog.getByRole('button', { name: '确 定' }).click();
+  }
+
   private visibleOption(label: string): Locator {
     // Ant Design 可能保留隐藏 option；只在当前可见弹层中定位实际选项。
     return this.page.locator(`.ant-select-dropdown:visible .ant-select-item-option[title="${label}"]`);

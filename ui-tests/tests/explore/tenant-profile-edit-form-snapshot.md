@@ -1,0 +1,35 @@
+- generic [ref=e34]:
+  - generic [ref=e37]:
+    - generic [ref=e119]: 编辑个人信息
+    - generic [ref=e121]:
+      - generic [ref=e124]:
+        - generic [ref=e127]:
+          - generic [ref=e129]:
+            - text: 姓名
+            - generic [ref=e130]: "*"
+          - textbox "姓名 *" [ref=e134]:
+            - /placeholder: 请输入姓名
+            - text: UI首页租客-8e8ecd26
+        - generic [ref=e137]:
+          - generic [ref=e139]:
+            - text: 性别
+            - generic [ref=e140]: "*"
+          - listbox "选择组" [ref=e143]:
+            - generic [ref=e144]:
+              - option "未知" [ref=e146] [cursor=pointer]
+              - option [selected] [ref=e148] [cursor=pointer]
+              - option "女" [ref=e158] [cursor=pointer]
+        - generic [ref=e161]:
+          - generic [ref=e163]:
+            - text: 手机号
+            - generic [ref=e164]: "*"
+          - textbox "手机号 *" [ref=e168]:
+            - /placeholder: 请输入手机号
+            - text: "19977524662"
+      - generic [ref=e170]:
+        - button "取消" [ref=e171] [cursor=pointer]
+        - button "保存" [ref=e172] [cursor=pointer]
+  - generic [ref=e82]:
+    - generic [ref=e83] [cursor=pointer]: 首页
+    - generic [ref=e92] [cursor=pointer]: 工单
+    - generic [ref=e101] [cursor=pointer]: 我的

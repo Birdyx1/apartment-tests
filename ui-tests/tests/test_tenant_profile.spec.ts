@@ -65,4 +65,58 @@ test.describe('租客 H5 我的个人中心', () => {
       await expect(page.getByRole('heading', { name: '租客登录' })).toBeVisible();
     });
   });
+
+  test('TPF-003: 编辑个人资料并保存', async ({ page, tenantAccount }) => {
+    const profilePage = new TenantProfilePage(page);
+    const updated = {
+      name: `更新-${tenantAccount.name}`,
+      phone: `188${Date.now().toString().slice(-8)}`,
+      gender: '女' as const,
+    };
+    let originalIdCard = '';
+
+    await test.step('准备：登录专属租客并打开编辑表单', async () => {
+      await profilePage.login(tenantAccount.phone, tenantAccount.password);
+      const initialResponsePromise = profileResponse(page);
+      await profilePage.openProfile();
+      const initialResponse = await initialResponsePromise;
+      expect(initialResponse.status()).toBe(200);
+      const initialBody = await initialResponse.json();
+      expect(initialBody.code).toBe(200);
+      originalIdCard = initialBody.data.idCard;
+      await profilePage.openEdit();
+    });
+
+    await test.step('操作：修改姓名、性别和手机号后保存', async () => {
+      await profilePage.fillEditForm(updated);
+      const updateResponsePromise = page.waitForResponse((response) =>
+        new URL(response.url()).pathname === '/tenant-app/profile' &&
+        response.request().method() === 'PUT');
+      const refreshedProfilePromise = profileResponse(page);
+      await profilePage.saveEdit();
+      const updateResponse = await updateResponsePromise;
+      expect(updateResponse.status()).toBe(200);
+      const updateBody = await updateResponse.json();
+      expect(updateBody.code).toBe(200);
+      expect(updateBody.data).toBe(true);
+
+      const refreshedProfile = await refreshedProfilePromise;
+      expect(refreshedProfile.status()).toBe(200);
+      const refreshedBody = await refreshedProfile.json();
+      expect(refreshedBody.code).toBe(200);
+      expect(refreshedBody.data).toMatchObject({
+        name: updated.name,
+        phone: updated.phone,
+        gender: 2,
+        idCard: originalIdCard,
+      });
+    });
+
+    await test.step('验证：个人中心展示保存后的资料', async () => {
+      await expect(profilePage.infoRow('姓名')).toContainText(updated.name);
+      await expect(profilePage.infoRow('性别')).toContainText(updated.gender);
+      await expect(profilePage.infoRow('手机号')).toContainText(updated.phone);
+      await expect(profilePage.infoRow('身份证')).toContainText(originalIdCard);
+    });
+  });
 });
