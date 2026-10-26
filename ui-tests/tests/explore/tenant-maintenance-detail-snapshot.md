@@ -1,0 +1,28 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - button [ref=f1e7]:
+        - generic [ref=f1e8] [cursor=pointer]
+      - generic [ref=f1e15]: 工单详情
+    - generic [ref=f1e17]:
+      - generic [ref=f1e18]: UI租客工单-d0358391
+      - generic [ref=f1e20]:
+        - generic [ref=f1e21]: 状态
+        - generic [ref=f1e22]: 待处理
+      - generic [ref=f1e24]:
+        - generic [ref=f1e25]: 紧急程度
+        - generic [ref=f1e26]: 紧急
+      - generic [ref=f1e28]:
+        - generic [ref=f1e29]: 描述
+        - generic [ref=f1e30]: 列表验证专用描述-d0358391
+      - generic [ref=f1e31]:
+        - generic [ref=f1e32]: 申请时间
+        - generic [ref=f1e33]: 2026-10-26 08:33:29
+    - generic [ref=f1e34]:
+      - generic [ref=f1e35]: 处理记录
+      - generic [ref=f1e37]: 2026-10-26 08:33:29 · create
+    - button "取消工单" [ref=f1e40] [cursor=pointer]
+  - generic [ref=f1e42]:
+    - generic [ref=f1e43] [cursor=pointer]: 首页
+    - generic [ref=f1e52] [cursor=pointer]: 工单
+    - generic [ref=f1e61] [cursor=pointer]: 我的

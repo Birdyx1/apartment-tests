@@ -1,0 +1,42 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - button [ref=f1e7]:
+        - generic [ref=f1e8] [cursor=pointer]
+      - generic [ref=f1e15]: 申请维修
+    - generic [ref=f1e16]:
+      - generic [ref=f1e17]: 工单信息
+      - generic [ref=f1e20]:
+        - generic [ref=f1e23]:
+          - generic [ref=f1e26]:
+            - generic [ref=f1e28]:
+              - text: 工单标题
+              - generic [ref=f1e29]: "*"
+            - textbox "工单标题 *" [ref=f1e33]:
+              - /placeholder: 请输入工单标题
+            - generic [ref=f1e118]: 请输入工单标题
+          - generic [ref=f1e36]:
+            - generic [ref=f1e37]: 问题描述
+            - generic [ref=f1e41]:
+              - textbox "问题描述" [ref=f1e42]:
+                - /placeholder: 请详细描述需要维修的问题
+              - generic [ref=f1e43]: 0/500
+          - generic [ref=f1e46]:
+            - generic [ref=f1e48]:
+              - text: 紧急程度
+              - generic [ref=f1e49]: "*"
+            - listbox "选择组" [ref=f1e52]:
+              - generic [ref=f1e53]:
+                - option [selected] [ref=f1e55] [cursor=pointer]
+                - option "紧急" [ref=f1e65] [cursor=pointer]
+                - option "非常紧急" [ref=f1e67] [cursor=pointer]
+          - generic [ref=f1e70]:
+            - generic [ref=f1e71]: 现场照片
+            - generic [ref=f1e78]:
+              - button "上传" [ref=f1e79]
+              - button "上传" [ref=f1e86] [cursor=pointer]
+        - button "提交申请" [active] [ref=f1e88] [cursor=pointer]
+  - generic [ref=f1e90]:
+    - generic [ref=f1e91] [cursor=pointer]: 首页
+    - generic [ref=f1e100] [cursor=pointer]: 工单
+    - generic [ref=f1e109] [cursor=pointer]: 我的

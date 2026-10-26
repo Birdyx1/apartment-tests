@@ -1,0 +1,21 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - heading "维修工单" [level=1] [ref=f1e7]
+      - paragraph [ref=f1e8]: 查看与跟踪报修进度
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]:
+        - generic [ref=f1e12]: UI租客工单-48d80509
+        - generic [ref=f1e13]: 待处理
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: 列表验证专用描述-48d80509
+        - generic [ref=f1e16]:
+          - text: UI首页-c246864e
+          - generic [ref=f1e17]: 紧急
+        - generic [ref=f1e18]: 2026-10-26 08:24:08
+        - button "取消" [ref=f1e19] [cursor=pointer]
+    - button "+" [ref=f1e20] [cursor=pointer]
+  - generic [ref=f1e22]:
+    - generic [ref=f1e23] [cursor=pointer]: 首页
+    - generic [ref=f1e32] [cursor=pointer]: 工单
+    - generic [ref=f1e41] [cursor=pointer]: 我的
