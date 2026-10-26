@@ -2,6 +2,7 @@ import { chromium } from '@playwright/test';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getAuthStatePath } from './auth-state';
+import { getBrowserLaunchArgs } from './browser-launch-args';
 
 export default async function globalSetup() {
   if (process.env.PW_SKIP_AUTH_SETUP === '1') {
@@ -29,6 +30,7 @@ export default async function globalSetup() {
   const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
   const browser = await chromium.launch({
     headless: true,
+    args: getBrowserLaunchArgs(),
     ...(process.env.PLAYWRIGHT_CHANNEL
       ? { channel: process.env.PLAYWRIGHT_CHANNEL as 'chrome' }
       : {}),

@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    // API 与 UI 都会操作共享测试库，避免并发构建互相撤销令牌或污染测试数据。
+    options {
+        disableConcurrentBuilds()
+    }
+
     stages {
         stage('检查 Python') {
             steps {
@@ -85,6 +90,12 @@ pipeline {
                                 set -eu
                                 export PATH="$JENKINS_HOME/.cache/node-24/bin:$PATH"
                                 export PLAYWRIGHT_BROWSERS_PATH="$JENKINS_HOME/.cache/ms-playwright"
+                                localhost_target=$(getent hosts host.docker.internal | awk 'NR == 1 {print $1}')
+                                if [ -z "$localhost_target" ]; then
+                                    echo "Cannot resolve host.docker.internal for UI API requests" >&2
+                                    exit 1
+                                fi
+                                export PW_LOCALHOST_TARGET="$localhost_target"
                                 cd ui-tests
                                 export CI=true
                                 BASE_URL=http://host.docker.internal:3000 \

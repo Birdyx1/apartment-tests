@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { getAuthStatePath } from './auth-state';
+import { getBrowserLaunchArgs } from './browser-launch-args';
 
 /**
  * Read environment variables from file.
@@ -38,6 +39,7 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     headless: true,
+    launchOptions: { args: getBrowserLaunchArgs() },
     video: 'on',
     trace: 'on',
     screenshot: 'on',

@@ -20,6 +20,8 @@ Jenkinsfile 顺序运行 Pytest 和 Playwright，并让两个 reporter 写入仓
 
 - 接口测试先用 `--clean-alluredir` 建立干净的统一结果目录。
 - UI 测试通过 Jenkins Credentials 注入用户名、密码和验证码；`global-setup.ts` 通过真实登录页生成被忽略的 `ui-tests/tests/.auth/jenkins-admin.json`。
+- 管理端静态包把 API 地址写为 `http://localhost:8080`。Jenkinsfile 会把浏览器中的 `localhost` 解析到 Docker Desktop 宿主机地址，让页面 API 请求可达本机后端。
+- API 与 UI 共用测试数据库，Jenkinsfile 禁止同一任务并发构建，避免多个回归任务相互污染数据和登录状态。
 - UI 每条用例会附带截图、视频和 Playwright Trace；Jenkins 同时归档 Allure 结果、UI HTML 报告和原始 `test-results`。
 - 接口或 UI 测试失败时，流水线继续执行剩余阶段并发布报告，最终构建状态仍为 FAILURE。
 
