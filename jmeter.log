@@ -1,0 +1,20 @@
+2026-10-26 14:03:58,178 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2026-10-26 14:03:58,187 INFO o.a.j.JMeter: Loading user properties from: /Users/xueganping/Desktop/测开/apache-jmeter-5.6.3/bin/user.properties
+2026-10-26 14:03:58,187 INFO o.a.j.JMeter: Loading system properties from: /Users/xueganping/Desktop/测开/apache-jmeter-5.6.3/bin/system.properties
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: Version 5.6.3
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: java.version=17.0.20.1
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: os.name=Mac OS X
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: os.arch=aarch64
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: os.version=26.6.2
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: file.encoding=UTF-8
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: java.awt.headless=null
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: Max memory     =1073741824
+2026-10-26 14:03:58,190 INFO o.a.j.JMeter: Available Processors =10
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: Default Locale=English (EN)
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: JMeterHome=/Users/xueganping/Desktop/测开/apache-jmeter-5.6.3
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: user.dir  =/Users/xueganping/StudyProject/quality/03-公寓Sass项目/apartment-tests
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: PWD       =/Users/xueganping/StudyProject/quality/03-公寓Sass项目/apartment-tests
+2026-10-26 14:03:58,194 INFO o.a.j.JMeter: IP: 10.129.49.162 Name: xueganpingdeMacBook-Air.local FullName: 10.129.49.162

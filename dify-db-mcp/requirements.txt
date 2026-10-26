@@ -1,0 +1,3 @@
+mcp[cli]
+PyMySQL
+python-dotenv
